@@ -1,72 +1,53 @@
-# uatisappy-V2.1
-
 # UatiAppy 📱
 
 ## Sobre o projeto
 
-O **UatiAppy** é um projeto acadêmico que tem como objetivo desenvolver um aplicativo de comunicação e troca de mensagens, inspirado em plataformas como o WhatsApp.
+O **UatiAppy** é um projeto acadêmico de aplicativo institucional de comunicação e troca de mensagens, inspirado em plataformas como o WhatsApp.
 
-A proposta é criar uma aplicação que permita aos usuários se comunicarem de maneira simples, rápida e intuitiva, possibilitando o envio e recebimento de mensagens em tempo real.
-
-O sistema busca oferecer uma experiência de comunicação eficiente, com funcionalidades essenciais para facilitar a interação entre os usuários, como conversas individuais, identificação de usuários e histórico de mensagens.
+A proposta é permitir que usuários se comuniquem de maneira simples e intuitiva, com foco inicial em conversas individuais, mensagens de texto e histórico de comunicação.
 
 ## 🎯 Objetivo do trabalho
 
-O principal objetivo do projeto é aplicar, na prática, os conhecimentos adquiridos durante o curso, envolvendo análise de requisitos, levantamento de funcionalidades, modelagem de sistemas, desenvolvimento de software, organização de tarefas e trabalho em equipe.
+Aplicar, na prática, conhecimentos de engenharia de software, análise de requisitos, modelagem de sistemas, desenvolvimento, testes, controle de versão e trabalho colaborativo.
 
-Além disso, o projeto busca desenvolver uma aplicação funcional que simule as principais características de um aplicativo moderno de mensagens.
+## 📚 Documentação do projeto
 
-## 💡 Funcionalidades previstas
+A documentação funcional e o limite da primeira entrega estão centralizados em:
 
-O UatiAppy pretende implementar as seguintes funcionalidades:
+- **[Requisitos e escopo do MVP](Docs/requisitos/escopo-mvp.md)** — RFs, RNFs, regras de negócio, funcionalidades dentro e fora do MVP, critérios gerais de aceite, rastreabilidade e pendências de validação.
 
-- **Cadastro de usuários:** permitir que novos usuários criem suas contas.
-- **Login:** possibilitar o acesso seguro à aplicação.
-- **Conversas individuais:** permitir a comunicação entre dois usuários.
-- **Envio e recebimento de mensagens:** possibilitar a troca de mensagens entre os usuários.
-- **Histórico de conversas:** armazenar e consultar mensagens anteriores.
-- **Identificação de usuários:** apresentar informações básicas dos participantes.
-- **Status das mensagens:** indicar se uma mensagem foi enviada, recebida ou entregue.
+Consulte esse documento antes de implementar funcionalidades ou criar/alterar Issues. Em caso de divergência, registre a dúvida e alinhe com o PO, o TechLead e o orientador; não assuma que uma funcionalidade futura faz parte do MVP.
 
-As funcionalidades poderão ser ampliadas conforme a evolução do projeto.
+## 💡 Funcionalidades previstas para o MVP
 
-## 🛠️ Como o projeto será desenvolvido
+- Cadastro, login e logout.
+- Identificação básica dos usuários.
+- Conversas individuais entre dois participantes.
+- Envio e recebimento de mensagens de texto.
+- Armazenamento e histórico de mensagens.
+- Exibição cronológica e estado das mensagens.
+- Tratamento de falhas de envio e controle de acesso.
 
-O desenvolvimento do UatiAppy será realizado de maneira organizada e dividido em etapas, para facilitar o acompanhamento das atividades e garantir que os requisitos sejam atendidos.
+Funcionalidades como grupos, anexos, edição/exclusão de mensagens e notificações push estão fora do MVP inicial e dependem de priorização futura.
 
-### 1. Planejamento e levantamento de requisitos
-Inicialmente, serão identificadas as necessidades do sistema, definindo quais funcionalidades deverão ser implementadas e como os usuários irão interagir com a aplicação.
+## 🛠️ Etapas de desenvolvimento
 
-### 2. Modelagem do sistema
-Serão desenvolvidos diagramas UML para representar a estrutura e o funcionamento do aplicativo, incluindo diagramas de classes, casos de uso, sequência, comunicação e outros necessários para documentar o projeto.
-
-### 3. Desenvolvimento da interface
-Será criada a interface visual do aplicativo, buscando proporcionar uma navegação simples, organizada e intuitiva.
-
-### 4. Desenvolvimento do sistema
-Será realizada a implementação das funcionalidades, incluindo cadastro, autenticação, comunicação entre usuários e gerenciamento das mensagens.
-
-### 5. Banco de dados
-Será estruturada uma base de dados para armazenar as informações dos usuários e o histórico das conversas.
-
-### 6. Testes e validação
-Serão realizados testes para verificar o funcionamento das funcionalidades, identificar possíveis erros e garantir que o sistema atenda aos requisitos definidos.
-
-### 7. Documentação e entrega
-Por fim, será realizada a documentação do projeto, com a descrição das funcionalidades, instruções de utilização e organização dos arquivos necessários para a entrega acadêmica.
+1. **Planejamento e requisitos:** levantamento, priorização e validação do escopo.
+2. **Modelagem:** elaboração dos diagramas UML necessários.
+3. **UX/UI:** desenho dos fluxos e interfaces dos casos de uso prioritários.
+4. **Arquitetura e desenvolvimento:** definição da solução técnica e implementação.
+5. **Persistência:** estruturação do armazenamento de usuários, conversas e mensagens.
+6. **Testes e validação:** verificação dos requisitos funcionais e não funcionais.
+7. **Documentação e entrega:** consolidação dos artefatos e preparação da demonstração acadêmica.
 
 ## 👥 Organização da equipe
 
-O desenvolvimento será realizado em equipe, com divisão de responsabilidades e organização das atividades por meio de Issues e GitHub Projects.
-
-O objetivo é manter o desenvolvimento organizado, acompanhar o andamento das tarefas e facilitar a colaboração entre os integrantes.
+As atividades são acompanhadas por meio das **GitHub Issues** e pull requests. Antes de abrir uma nova Issue, verifique se já existe uma tarefa equivalente e consulte a documentação de requisitos para manter o trabalho alinhado ao MVP.
 
 ## 📌 Resultados esperados
 
-Ao final do trabalho, espera-se entregar uma aplicação de comunicação funcional, capaz de demonstrar os principais recursos de um aplicativo de mensagens.
-
-O projeto também permitirá que a equipe desenvolva habilidades relacionadas à programação, engenharia de software, modelagem UML, controle de versão, gerenciamento de projetos e trabalho colaborativo.
+Entregar uma aplicação funcional que demonstre a comunicação textual individual entre usuários, além de evidenciar a aplicação prática de engenharia de software, modelagem UML, testes e colaboração em equipe.
 
 ---
 
-**UatiAppy – Conectando pessoas através da comunicação!** 🚀
+**UatiAppy — Conectando pessoas através da comunicação!** 🚀
