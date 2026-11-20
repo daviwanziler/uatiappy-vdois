@@ -153,7 +153,410 @@ Antes de iniciar uma implementação, a equipe deve conferir se já existe uma I
 - Estabelecer metas mensuráveis para desempenho e demais RNFs que exigirem quantificação.
 - Confirmar se todos os itens listados no MVP são compatíveis com o prazo e as orientações acadêmicas.
 
-## 10. Controle de alterações
+## 10. Diagramas UML
+
+Esta seção reúne a seleção de diagramas definida pela equipe para documentar o UatiAppy. Os códigos-fonte abaixo são representações iniciais editáveis e devem ser revisados pelo TechLead, PO, equipe e orientador antes de serem considerados modelos aprovados.
+
+**Convenções importantes:**
+- Os diagramas devem representar somente o escopo funcional atualmente descrito neste documento.
+- Elementos arquiteturais são conceituais enquanto tecnologias, componentes concretos e infraestrutura não forem definidos.
+- Estados e confirmações de mensagem ainda dependem de validação; não interpretar os exemplos como confirmação de leitura.
+- Os blocos PlantUML são fontes editáveis. Para visualizar os desenhos, é necessário renderizá-los com uma ferramenta compatível com PlantUML.
+
+### 10.1 Diagramas estruturais
+
+A equipe definiu cinco diagramas estruturais: Classes, Componentes, Perfis, Objetos e Implantação.
+
+#### 10.1.1 Diagrama de Classes
+
+**Objetivo:** representar as principais entidades do domínio e seus relacionamentos. A proposta abaixo contém apenas Usuário, Conversa e Mensagem, compatíveis com os requisitos atuais.
+
+**Rastreabilidade:** RF-003 a RF-009; RN-001, RN-003 a RN-007; RNF-004 e RNF-007.
+
+```plantuml
+@startuml
+title UatiAppy - Diagrama de Classes (proposta inicial)
+
+class Usuario {
+  identificadorUnico : String
+  informacoesBasicas : String
+}
+
+class Conversa {
+  identificador : String
+}
+
+class Mensagem {
+  identificador : String
+  conteudoTexto : String
+  referenciaTemporal : DateTime
+  estado : EstadoMensagem
+}
+
+Conversa "0..*" -- "2" Usuario : participantes
+Conversa "1" -- "0..*" Mensagem : historico
+Usuario "1" -- "0..*" Mensagem : autor
+
+note right of Conversa
+  Conversa individual:
+  exatamente dois participantes.
+end note
+
+note right of Mensagem
+  Os estados e a referência temporal
+  precisam ser detalhados pela equipe.
+end note
+@enduml
+```
+
+#### 10.1.2 Diagrama de Componentes
+
+**Objetivo:** apresentar uma divisão lógica inicial de responsabilidades. Os componentes são agrupamentos conceituais, não tecnologias ou serviços já escolhidos.
+
+**Rastreabilidade:** RF-001 a RF-012; RNF-003, RNF-004, RNF-008 e RNF-010.
+
+```plantuml
+@startuml
+title UatiAppy - Diagrama de Componentes (visao logica)
+
+component "Interface da Aplicacao" as UI
+component "Responsabilidade de Autenticacao" as AUTH
+component "Responsabilidade de Conversas" as CONV
+component "Responsabilidade de Mensagens" as MSG
+database "Repositorio de Dados" as DATA
+
+UI --> AUTH : cadastro / login / logout
+UI --> CONV : abrir conversa / consultar historico
+UI --> MSG : enviar / receber mensagem
+AUTH --> DATA : dados de usuario
+CONV --> DATA : dados de conversa
+MSG --> DATA : mensagens
+
+note bottom
+  Divisao conceitual para discussao.
+  A arquitetura e as tecnologias concretas
+  ainda precisam ser definidas.
+end note
+@enduml
+```
+
+#### 10.1.3 Diagrama de Perfis
+
+**Objetivo:** registrar uma proposta de perfil UML do domínio, com estereótipos conceituais para os elementos centrais. A aplicação efetiva do perfil e sua extensão às metaclasses UML devem ser revisadas antes da versão final.
+
+**Rastreabilidade:** RF-003 a RF-009; RN-001, RN-003 e RN-004.
+
+```plantuml
+@startuml
+title UatiAppy - Perfil UML (proposta conceitual)
+
+package "UatiAppyProfile" <<profile>> {
+  class "Usuario" as SUsuario <<stereotype>>
+  class "Conversa" as SConversa <<stereotype>>
+  class "Mensagem" as SMensagem <<stereotype>>
+  class "Class" as UMLClass <<metaclass>>
+}
+
+SUsuario ..> UMLClass : «extend»
+SConversa ..> UMLClass : «extend»
+SMensagem ..> UMLClass : «extend»
+
+note right of SUsuario
+  Estereótipo para classes
+  que representam contas de usuário.
+end note
+
+note right of SConversa
+  Estereótipo para classes
+  que representam conversas individuais.
+end note
+
+note right of SMensagem
+  Estereótipo para classes
+  que representam mensagens textuais.
+end note
+
+note bottom
+  Perfil conceitual: validar a notação de extensão
+  e a aplicação do perfil na ferramenta UML adotada.
+end note
+@enduml
+```
+
+#### 10.1.4 Diagrama de Objetos
+
+**Objetivo:** mostrar um exemplo de instâncias em um momento da execução. Os nomes são ilustrativos e não representam dados reais.
+
+**Rastreabilidade:** RF-004 a RF-009; RN-003, RN-004 e RN-006.
+
+```plantuml
+@startuml
+title UatiAppy - Diagrama de Objetos (exemplo ilustrativo)
+
+object "usuarioA : Usuario" as usuarioA {
+  identificadorUnico = "U001"
+  informacoesBasicas = "Aluno"
+}
+object "usuarioB : Usuario" as usuarioB {
+  identificadorUnico = "U002"
+  informacoesBasicas = "Professor"
+}
+object "conversa1 : Conversa" as conversa1 {
+  identificador = "C001"
+}
+object "mensagem1 : Mensagem" as mensagem1 {
+  identificador = "M001"
+  conteudoTexto = "Olá!"
+  referenciaTemporal = "2026-11-20T10:30:00"
+  estado = "armazenada"
+}
+
+conversa1 -- usuarioA : participante
+conversa1 -- usuarioB : participante
+conversa1 -- mensagem1 : historico
+mensagem1 -- usuarioA : autor
+
+note bottom
+  Instâncias e valores fictícios para exemplificar
+  um instante da execução; validar os atributos
+  e o vocabulário de estados com o PO.
+end note
+@enduml
+```
+
+#### 10.1.5 Diagrama de Implantação
+
+**Objetivo:** representar nós lógicos envolvidos na execução, sem fixar hospedagem, linguagem, banco de dados, protocolo ou infraestrutura ainda não decididos.
+
+**Rastreabilidade:** RNF-002, RNF-003, RNF-005, RNF-006 e RNF-010.
+
+```plantuml
+@startuml
+title UatiAppy - Diagrama de Implantacao (visao conceitual)
+
+node "Dispositivo do Usuario" as DEVICE {
+  artifact "Aplicacao UatiAppy" as APP
+}
+
+node "Ambiente de Execucao do Sistema" as SERVER {
+  artifact "Logica da Aplicacao" as LOGIC
+}
+
+node "Ambiente de Persistencia" as STORAGE {
+  database "Dados de Usuarios, Conversas e Mensagens" as DB
+}
+
+APP --> LOGIC : requisicoes e respostas
+LOGIC --> DB : leitura e gravacao
+
+note bottom
+  Nos logicos ilustrativos.
+  Hospedagem, tecnologias, topologia
+  e comunicacao ainda nao foram aprovadas.
+end note
+@enduml
+```
+
+### 10.2 Diagramas comportamentais
+
+A equipe definiu cinco diagramas comportamentais: Casos de Uso (principal), Máquina de Estados, Comunicação, Atividades e Visão Geral de Interação.
+
+#### 10.2.1 Diagrama de Casos de Uso — principal
+
+**Objetivo:** apresentar os atores e as funcionalidades que compõem o escopo do MVP. O ator genérico Usuário representa qualquer participante autenticado; a diferenciação entre aluno e professor poderá ser detalhada se fizer parte das regras confirmadas do produto.
+
+**Rastreabilidade:** RF-001 a RF-012; RN-001 a RN-005.
+
+```plantuml
+@startuml
+left to right direction
+title UatiAppy - Diagrama de Casos de Uso
+
+actor Usuario
+
+rectangle UatiAppy {
+  usecase "Cadastrar-se" as UC1
+  usecase "Realizar login" as UC2
+  usecase "Visualizar perfil basico" as UC3
+  usecase "Iniciar ou acessar
+conversa individual" as UC4
+  usecase "Enviar mensagem
+de texto" as UC5
+  usecase "Receber mensagem
+de texto" as UC6
+  usecase "Consultar historico" as UC7
+  usecase "Consultar estado
+da mensagem" as UC8
+  usecase "Visualizar falha
+de envio" as UC9
+  usecase "Realizar logout" as UC10
+}
+
+Usuario -- UC1
+Usuario -- UC2
+Usuario -- UC3
+Usuario -- UC4
+Usuario -- UC5
+Usuario -- UC6
+Usuario -- UC7
+Usuario -- UC8
+Usuario -- UC9
+Usuario -- UC10
+@enduml
+```
+
+#### 10.2.2 Diagrama de Máquina de Estados
+
+**Objetivo:** ilustrar, de forma provisória, o ciclo de envio de uma mensagem. Os nomes e as transições precisam ser confirmados pelo PO e pela equipe, em especial o significado de “enviada”, “armazenada” e “entregue”.
+
+**Rastreabilidade:** RF-005 a RF-007, RF-010 e RF-011; RN-004 e RN-007; RNF-009.
+
+```plantuml
+@startuml
+title UatiAppy - Maquina de Estados da Mensagem (rascunho)
+
+[*] --> Rascunho
+Rascunho --> Enviando : solicitar envio
+Enviando --> ConfirmadaPeloSistema : confirmacao de armazenamento
+Enviando --> Falha : falha no envio
+Falha --> Enviando : nova tentativa (a validar)
+ConfirmadaPeloSistema --> DisponibilizadaAoDestinatario : confirmacao de disponibilizacao
+
+state ConfirmadaPeloSistema
+state DisponibilizadaAoDestinatario
+
+note right of DisponibilizadaAoDestinatario
+  Nao significa mensagem lida.
+  A confirmacao de leitura nao faz
+  parte do escopo definido atualmente.
+end note
+
+note bottom
+  Rascunho, transicoes e nova tentativa
+  sao elementos provisórios para validacao.
+end note
+@enduml
+```
+
+#### 10.2.3 Diagrama de Comunicação
+
+**Objetivo:** demonstrar a colaboração entre a aplicação do remetente, a lógica do sistema, o repositório e a aplicação do destinatário durante o envio de uma mensagem.
+
+**Rastreabilidade:** RF-005 a RF-007, RF-010 e RF-011; RN-002, RN-004, RN-005 e RN-007; RNF-003, RNF-004, RNF-005 e RNF-009.
+
+```plantuml
+@startuml
+title UatiAppy - Diagrama de Comunicacao
+
+object "App do remetente" as Remetente
+object "Servidor" as Servidor
+database "Repositorio" as Repositorio
+object "App do destinatario" as Destinatario
+
+Remetente -> Servidor : 1: enviarMensagem(conteudo, conversa)
+Servidor -> Servidor : 1.1: validar sessao e autorizacao
+Servidor -> Repositorio : 2: salvar mensagem
+Repositorio --> Servidor : 2.1: confirmar armazenamento
+Servidor --> Remetente : 3: informar resultado do envio
+Servidor -> Destinatario : 4: [destinatario online] disponibilizar mensagem
+Destinatario --> Servidor : 4.1: confirmar recebimento (a definir)
+
+note bottom
+  Os objetos e as ligações representam os participantes
+  da colaboração. A condição entre colchetes é uma
+  guarda da mensagem; não representa confirmação de leitura.
+  O significado de recebimento/entrega ainda deve ser validado.
+end note
+@enduml
+```
+
+#### 10.2.4 Diagrama de Atividades
+
+**Objetivo:** representar o fluxo de envio de uma mensagem, incluindo o caminho de falha sem afirmar critérios de validação ainda não especificados.
+
+**Rastreabilidade:** RF-002, RF-004, RF-005, RF-007, RF-010 e RF-011; RN-002, RN-004 e RN-007; RNF-003 e RNF-009.
+
+```plantuml
+@startuml
+title UatiAppy - Diagrama de Atividades: Enviar Mensagem
+
+start
+:Usuario acessa a aplicacao;
+:Abre ou acessa conversa individual;
+:Escreve mensagem de texto;
+:Solicita envio;
+if (Sessao valida e acesso autorizado?) then (Sim)
+  :Sistema processa o envio;
+  :Registra mensagem no repositorio;
+  if (Armazenamento confirmado?) then (Sim)
+    :Sistema disponibiliza mensagem ao destinatario;
+    :Atualiza estado conforme confirmacoes;
+    :Apresenta resultado ao remetente;
+  else (Nao)
+    :Informa falha no envio;
+  endif
+else (Nao)
+  :Impede a operacao protegida;
+endif
+stop
+@enduml
+```
+
+#### 10.2.5 Diagrama de Visão Geral de Interação
+
+**Objetivo:** oferecer uma visão resumida das interações principais do MVP, conectando autenticação, acesso à conversa, envio, persistência, recebimento e consulta ao histórico.
+
+**Rastreabilidade:** RF-001 a RF-012, conforme os fluxos representados; RN-001 a RN-007.
+
+```plantuml
+@startuml
+title UatiAppy - Visao Geral de Interacao
+
+actor Usuario
+participant "Aplicacao UatiAppy" as App
+participant "Sistema" as Sistema
+participant "Repositorio" as Repo
+participant "Aplicacao do destinatario" as Dest
+
+ref over Usuario, App : Cadastro ou Login
+ref over Usuario, App : Acessar conversa individual
+ref over Usuario, App : Enviar mensagem de texto
+ref over Sistema, Repo : Armazenar mensagem
+ref over Sistema, Dest : Disponibilizar mensagem ao destinatario
+ref over Usuario, App : Consultar historico
+ref over Usuario, App : Logout
+@enduml
+```
+
+### 10.3 Matriz de rastreabilidade dos diagramas
+
+| Diagrama | Requisitos e regras relacionados |
+|---|---|
+| Classes | RF-003 a RF-009; RN-001, RN-003 a RN-007; RNF-004 e RNF-007 |
+| Componentes | RF-001 a RF-012; RNF-003, RNF-004, RNF-008 e RNF-010 |
+| Perfis | RF-003 a RF-009; RN-001, RN-003 e RN-004 |
+| Objetos | RF-004 a RF-009; RN-003, RN-004 e RN-006 |
+| Implantação | RNF-002, RNF-003, RNF-005, RNF-006 e RNF-010 |
+| Casos de Uso | RF-001 a RF-012; RN-001 a RN-005 |
+| Máquina de Estados | RF-005 a RF-007, RF-010 e RF-011; RN-004 e RN-007; RNF-009 |
+| Comunicação | RF-005 a RF-007, RF-010 e RF-011; RN-002, RN-004, RN-005 e RN-007 |
+| Atividades | RF-002, RF-004, RF-005, RF-007, RF-010 e RF-011; RN-002, RN-004 e RN-007 |
+| Visão Geral de Interação | RF-001 a RF-012; RN-001 a RN-007 |
+
+### 10.4 Pendências específicas dos diagramas
+
+- Validar com o PO os atores e os casos de uso, inclusive se aluno e professor devem aparecer como especializações de Usuário.
+- Confirmar o modelo de domínio, atributos e multiplicidades do diagrama de classes.
+- Revisar a divisão lógica de componentes com base na arquitetura que a equipe vier a escolher.
+- Validar a sintaxe e a aplicação do perfil UML, incluindo estereótipos e metaclasses estendidas.
+- Substituir os valores ilustrativos do diagrama de objetos por um cenário acadêmico aprovado, sem usar dados pessoais reais.
+- Atualizar o diagrama de implantação após a definição de tecnologias, ambientes e hospedagem.
+- Definir os estados oficiais da mensagem, eventos, transições e confirmações.
+- Confirmar se a entrega ao destinatário depende de ele estar online e como essa condição será identificada.
+- Revisar a visão geral de interação e ajustar sua notação ao padrão de modelagem adotado pela equipe.
+- Renderizar e revisar todos os diagramas antes de gerar a versão final em PDF.
+
+## 11. Controle de alterações
 
 Esta é uma versão inicial consolidada para revisão. Alterações de escopo devem ser discutidas com o PO, avaliadas tecnicamente pelo TechLead, comunicadas à equipe e submetidas à validação do orientador quando necessário.
 
