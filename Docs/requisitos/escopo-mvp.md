@@ -178,22 +178,22 @@ A equipe definiu cinco diagramas estruturais: Classes, Componentes, Perfis, Obje
 title UatiAppy - Diagrama de Classes (proposta inicial)
 
 class Usuario {
-  identificadorUnico
-  informacoesBasicas
+  identificadorUnico : String
+  informacoesBasicas : String
 }
 
 class Conversa {
-  identificador
+  identificador : String
 }
 
 class Mensagem {
-  identificador
-  conteudoTexto
-  referenciaTemporal
-  estado
+  identificador : String
+  conteudoTexto : String
+  referenciaTemporal : DateTime
+  estado : EstadoMensagem
 }
 
-Conversa "1" -- "2" Usuario : participantes
+Conversa "0..*" -- "2" Usuario : participantes
 Conversa "1" -- "0..*" Mensagem : historico
 Usuario "1" -- "0..*" Mensagem : autor
 
@@ -250,26 +250,35 @@ end note
 @startuml
 title UatiAppy - Perfil UML (proposta conceitual)
 
-package "UatiAppyProfile" <<Profile>> {
-  class Usuario <<stereotype>>
-  class Conversa <<stereotype>>
-  class Mensagem <<stereotype>>
+package "UatiAppyProfile" <<profile>> {
+  class "Usuario" as SUsuario <<stereotype>>
+  class "Conversa" as SConversa <<stereotype>>
+  class "Mensagem" as SMensagem <<stereotype>>
+  class "Class" as UMLClass <<metaclass>>
 }
 
-note right of Usuario
-  Representa uma conta
-  identificavel no sistema.
+SUsuario ..> UMLClass : «extend»
+SConversa ..> UMLClass : «extend»
+SMensagem ..> UMLClass : «extend»
+
+note right of SUsuario
+  Estereótipo para classes
+  que representam contas de usuário.
 end note
 
-note right of Conversa
-  Representa uma conversa
-  individual entre dois usuarios.
+note right of SConversa
+  Estereótipo para classes
+  que representam conversas individuais.
 end note
 
-note right of Mensagem
-  Representa uma mensagem
-  textual associada a autor
-  e conversa.
+note right of SMensagem
+  Estereótipo para classes
+  que representam mensagens textuais.
+end note
+
+note bottom
+  Perfil conceitual: validar a notação de extensão
+  e a aplicação do perfil na ferramenta UML adotada.
 end note
 @enduml
 ```
@@ -284,20 +293,33 @@ end note
 @startuml
 title UatiAppy - Diagrama de Objetos (exemplo ilustrativo)
 
-object "usuarioA : Usuario" as usuarioA
-object "usuarioB : Usuario" as usuarioB
-object "conversa1 : Conversa" as conversa1
-object "mensagem1 : Mensagem" as mensagem1
+object "usuarioA : Usuario" as usuarioA {
+  identificadorUnico = "U001"
+  informacoesBasicas = "Aluno"
+}
+object "usuarioB : Usuario" as usuarioB {
+  identificadorUnico = "U002"
+  informacoesBasicas = "Professor"
+}
+object "conversa1 : Conversa" as conversa1 {
+  identificador = "C001"
+}
+object "mensagem1 : Mensagem" as mensagem1 {
+  identificador = "M001"
+  conteudoTexto = "Olá!"
+  referenciaTemporal = "2026-11-20T10:30:00"
+  estado = "armazenada"
+}
 
 conversa1 -- usuarioA : participante
 conversa1 -- usuarioB : participante
 conversa1 -- mensagem1 : historico
 mensagem1 -- usuarioA : autor
 
-note right of mensagem1
-  conteudoTexto = "Ola!"
-  estado = "a definir"
-  referenciaTemporal = "a definir"
+note bottom
+  Instâncias e valores fictícios para exemplificar
+  um instante da execução; validar os atributos
+  e o vocabulário de estados com o PO.
 end note
 @enduml
 ```
@@ -427,26 +449,23 @@ end note
 title UatiAppy - Diagrama de Comunicacao
 
 object "App do remetente" as Remetente
-object "Servidor / logica do sistema" as Servidor
+object "Servidor" as Servidor
 database "Repositorio" as Repositorio
 object "App do destinatario" as Destinatario
 
-Remetente -> Servidor : 1. enviarMensagem(conteudo, conversa)
-activate Servidor
-Servidor -> Servidor : 1.1 validar sessao e autorizacao
-Servidor -> Repositorio : 2. salvar mensagem
-Repositorio --> Servidor : 2.1 confirmar armazenamento
-Servidor --> Remetente : 3. confirmar resultado do envio
-opt destinatario disponivel / online
-  Servidor -> Destinatario : 4. disponibilizar mensagem
-  Destinatario --> Servidor : 4.1 confirmar recebimento (a definir)
-end
-deactivate Servidor
+Remetente -> Servidor : 1: enviarMensagem(conteudo, conversa)
+Servidor -> Servidor : 1.1: validar sessao e autorizacao
+Servidor -> Repositorio : 2: salvar mensagem
+Repositorio --> Servidor : 2.1: confirmar armazenamento
+Servidor --> Remetente : 3: informar resultado do envio
+Servidor -> Destinatario : 4: [destinatario online] disponibilizar mensagem
+Destinatario --> Servidor : 4.1: confirmar recebimento (a definir)
 
 note bottom
-  A condicao de disponibilidade e o mecanismo
-  de confirmacao precisam ser definidos.
-  Nao ha confirmacao de leitura neste modelo.
+  Os objetos e as ligações representam os participantes
+  da colaboração. A condição entre colchetes é uma
+  guarda da mensagem; não representa confirmação de leitura.
+  O significado de recebimento/entrega ainda deve ser validado.
 end note
 @enduml
 ```
@@ -493,19 +512,19 @@ stop
 @startuml
 title UatiAppy - Visao Geral de Interacao
 
-start
-: ref "Cadastro ou Login";
-: ref "Acessar conversa individual";
-: ref "Enviar mensagem de texto";
-if (Envio processado?) then (Sim)
-  : ref "Armazenar mensagem";
-  : ref "Disponibilizar ao destinatario";
-  : ref "Consultar historico";
-else (Nao)
-  : ref "Apresentar falha ao remetente";
-endif
-: ref "Logout";
-stop
+actor Usuario
+participant "Aplicacao UatiAppy" as App
+participant "Sistema" as Sistema
+participant "Repositorio" as Repo
+participant "Aplicacao do destinatario" as Dest
+
+ref over Usuario, App : Cadastro ou Login
+ref over Usuario, App : Acessar conversa individual
+ref over Usuario, App : Enviar mensagem de texto
+ref over Sistema, Repo : Armazenar mensagem
+ref over Sistema, Dest : Disponibilizar mensagem ao destinatario
+ref over Usuario, App : Consultar historico
+ref over Usuario, App : Logout
 @enduml
 ```
 
