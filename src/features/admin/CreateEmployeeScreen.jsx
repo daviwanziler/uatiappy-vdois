@@ -67,14 +67,14 @@ export default function CreateEmployeeScreen() {
       {logoutError && <p className="message message-error" role="alert">{logoutError}</p>}
       <section className="auth-card admin-card">
         <h2>Cadastrar funcionário</h2>
-        <p className="auth-description">Administrador: {user?.email}. Crie a conta e defina a senha inicial do funcionário.</p>
+        <p className="auth-description">Administrador: {user?.email}. Crie a conta. A senha deve ter de 12 a 128 caracteres, com maiúscula, minúscula, número e símbolo.</p>
         <form onSubmit={handleSubmit}>
           <label htmlFor="employee-email">E-mail de acesso</label>
           <input id="employee-email" type="email" autoComplete="off" value={email} onChange={e => setEmail(e.target.value)} required />
           <label htmlFor="initial-password">Senha inicial</label>
-          <input id="initial-password" type="password" autoComplete="new-password" minLength={12} value={password} onChange={e => setPassword(e.target.value)} required />
+          <input id="initial-password" type="password" autoComplete="new-password" minLength={12} maxLength={128} value={password} onChange={e => setPassword(e.target.value)} required />
           <label htmlFor="confirm-password">Confirmar senha</label>
-          <input id="confirm-password" type="password" autoComplete="new-password" minLength={8} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required />
+          <input id="confirm-password" type="password" autoComplete="new-password" minLength={12} maxLength={128} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required />
           {errorMessage && <p className="message message-error" role="alert">{errorMessage}</p>}
           {feedback && <p className="message message-success" role="status">{feedback}</p>}
           <button className="primary-button" type="submit" disabled={submitting}>{submitting ? 'Criando…' : 'Criar conta'}</button>
