@@ -74,7 +74,7 @@ Em Supabase hospedado, CORS falha fechado quando a allowlist não está configur
 - **#110:** RLS para perfis, conversas, participantes e mensagens; testes negativos de isolamento e elevação de privilégio.
 - **#111:** sign-up público desabilitado na configuração local; perfis sem marcador server-side ficam DISABLED; metadados de usuário não concedem papel nem ativação.
 - **#112:** rate limit executado antes de qualquer registro de auditoria para usuários não administradores; somente as cinco primeiras tentativas por hora geram registros, e tentativas bloqueadas não geram novas linhas.
-- **#113:** plano pgTAP atualizado para 19 asserções; a contagem foi conferida no arquivo SQL e deve ser confirmada pela execução de `supabase test db`.
+- **#113:** plano pgTAP atualizado para 23 asserções; a contagem foi conferida no arquivo SQL e deve ser confirmada pela execução de `supabase test db`.
 - **#114:** `email_sha256` recebe SHA-256 de `trim().toLowerCase()` do e-mail alvo; `actor_id` continua sendo o UUID do administrador.
 - **#115:** todos os caminhos após reserva finalizam a tentativa; JSON/dados inválidos usam `VALIDATION_FAILURE`; exceções geram `FAILURE`, logs estruturados e timeout de pendências após 15 minutos pela rotina de manutenção.
 - **#116:** migration cria conversas, participantes, mensagens, índices, constraints, RLS e RPC `create_direct_conversation`, com bloqueio de criação direta e prevenção de duplicidade.
@@ -90,7 +90,7 @@ deno test --allow-env supabase/functions/tests/security_test.ts
 supabase test db
 ```
 
-Os testes SQL usam pgTAP e devem ser executados em ambiente local/descartável com as migrations aplicadas: `supabase start`, `supabase db reset` e `supabase test db`. O arquivo `supabase/tests/security_rls.test.sql` declara `extensions.plan(19)` e contém 19 chamadas de asserção. A execução bem-sucedida de `supabase test db` no CI é a evidência necessária para considerar a suíte validada.
+Os testes SQL usam pgTAP e devem ser executados em ambiente local/descartável com as migrations aplicadas: `supabase start`, `supabase db reset` e `supabase test db`. O arquivo `supabase/tests/security_rls.test.sql` declara `extensions.plan(23)` e contém 23 chamadas de asserção. A execução bem-sucedida de `supabase test db` no CI é a evidência necessária para considerar a suíte validada.
 
 ### Limpeza automática da auditoria
 
@@ -126,3 +126,10 @@ Antes de produção, revisar o esquema final, executar os testes integrados e co
 - A tela administrativa permite criar, bloquear, desativar e reativar contas de funcionários.
 - Administradores não podem bloquear a própria conta nem alterar outra conta administrativa por esta função; essa operação exige procedimento de recuperação separado.
 - O MVP não inclui redefinição de senha nem fluxo de troca obrigatória no primeiro acesso.
+
+
+### Reconciliação da criação de funcionários — Issue #120
+
+A migration `20261125000500_employee_creation_audit_reconciliation.sql` adiciona `account_user_id` à auditoria e funções server-side para reconciliar tentativas pendentes com usuários reais do Supabase Auth pelo hash SHA-256 do e-mail normalizado. A limpeza diária tenta reconciliar antes de marcar uma tentativa antiga como falha. A Edge Function grava o ID do usuário criado; se a gravação falhar, responde HTTP 202 com `PENDING_RECONCILIATION`, não comunica falha de criação e instrui o administrador a não repetir a operação. Uma nova solicitação verifica/reconcilia uma conta já existente antes de chamar `createUser`. A tela administrativa exibe esse estado explicitamente.
+
+A resposta HTTP 202 indica que a conta foi criada, mas a auditoria ainda depende de reconciliação. Confirme a reconciliação consultando `employee_creation_audit.account_user_id`, `outcome` e `detail_code`; não solicite um novo cadastro enquanto o estado estiver pendente.
