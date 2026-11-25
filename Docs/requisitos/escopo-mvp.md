@@ -436,6 +436,18 @@ note bottom
   Segredos e chaves privilegiadas nunca ficam no navegador.
 end note
 @enduml
+```
+
+### 10.2 Diagramas comportamentais
+
+A equipe definiu cinco diagramas comportamentais: Casos de Uso (principal), Máquina de Estados, Comunicação, Atividades e Visão Geral de Interação.
+
+#### 10.2.1 Diagrama de Casos de Uso — principal
+
+**Objetivo:** apresentar os atores e as funcionalidades do MVP. Administrador e Funcionário possuem perfis distintos; a administração gerencia contas e os funcionários utilizam as funcionalidades de comunicação. A redefinição de senha é um procedimento administrativo, não um fluxo de autoatendimento.
+
+**Rastreabilidade:** RF-001 a RF-015; RN-001 a RN-014; RNF-011 e RNF-012.
+
 ```plantuml
 @startuml
 left to right direction
