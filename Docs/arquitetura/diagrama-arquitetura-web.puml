@@ -1,0 +1,85 @@
+@startuml
+title UatiAppy — Arquitetura lógica da aplicação Web responsiva
+
+left to right direction
+skinparam componentStyle rectangle
+
+actor "Administrador" as Admin
+actor "Funcionário" as Employee
+
+node "Navegador em celular" as MobileBrowser {
+  artifact "UatiAppy Web\nJavaScript\nInterface responsiva" as MobileUI
+}
+
+node "Navegador em computador" as DesktopBrowser {
+  artifact "UatiAppy Web\nJavaScript\nInterface responsiva" as DesktopUI
+}
+
+cloud "Vercel — hospedagem Web" as Vercel {
+  component "Aplicação Web publicada\nframework a definir" as WebApp
+}
+
+cloud "Supabase — backend como serviço" as Supabase {
+  component "Serviços/API do Supabase\n(consumidos via SDK/API)" as Api
+  component "Supabase Auth\n(se selecionado e configurado)" as Auth
+  component "Serviço administrativo seguro\n(a definir no servidor)" as AdminService
+  database "PostgreSQL" as DB
+  note right of DB
+    Políticas de acesso/RLS,
+    se adotadas, são aplicadas
+    no banco de dados.
+  end note
+}
+
+Admin --> MobileUI
+Employee --> MobileUI
+Admin --> DesktopUI
+Employee --> DesktopUI
+MobileUI --> WebApp : HTTPS
+DesktopUI --> WebApp : HTTPS
+WebApp --> Api : SDK/API — HTTPS
+Api --> DB : operações de dados
+Api --> Auth : autenticação (se adotada)
+Auth --> DB : identidade e sessão
+
+AdminService --> Api : operações administrativas privilegiadas\npor API segura no servidor
+Api --> DB : operações autorizadas e políticas RLS
+
+note right of AdminService
+  Operações privilegiadas, como criar
+  contas e redefinir credenciais,
+  devem ocorrer somente no servidor.
+  Nunca incluir service_role ou
+  segredos privilegiados no navegador.
+  O mecanismo específico ainda
+  não foi escolhido.
+end note
+
+note bottom of WebApp
+  Administrador gerencia contas conforme
+  permissões definidas no backend.
+  Funcionário não realiza autocadastro,
+  alteração ou redefinição autônoma de senha.
+  Contas bloqueadas/desativadas não devem
+  acessar os recursos protegidos.
+end note
+
+cloud "GitHub" as GitHub {
+  component "Repositório e gestão\nIssues / Pull Requests" as Repo
+  component "GitHub Actions\n(workflows de CI/CD)" as Actions
+}
+Repo --> Actions : eventos do repositório
+Actions ..> Vercel : verificações e deploy\nconforme workflows configurados
+
+note bottom
+  Plataforma definida: aplicação Web responsiva,
+  acessível por um único link em navegadores de
+  celulares e computadores. Linguagem: JavaScript.
+  Framework Web ainda será definido pelo TechLead.
+  Não é aplicativo nativo nem PWA.
+  Supabase/PostgreSQL fornece backend e dados.
+  Vercel hospeda a aplicação Web.
+  Serviços Supabase e mecanismo administrativo
+  privilegiado ainda serão detalhados.
+end note
+@enduml
