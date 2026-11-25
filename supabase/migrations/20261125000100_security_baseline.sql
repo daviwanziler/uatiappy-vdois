@@ -51,7 +51,7 @@ select id, email,
   case when raw_app_meta_data ->> 'role' = 'ADMINISTRADOR'
     then 'ADMINISTRADOR' else 'FUNCIONARIO' end
 from auth.users
-on conflict (user_id) do update set email = excluded.email;
+on conflict (user_id) do update set email = excluded.email, role = excluded.role;
 
 create or replace function public.is_active_employee()
 returns boolean
