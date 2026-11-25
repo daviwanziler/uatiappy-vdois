@@ -184,10 +184,6 @@ create policy "participants read own conversations"
 on public.conversations for select to authenticated
 using (public.is_conversation_member(id));
 
-create policy "active users create own conversations"
-on public.conversations for insert to authenticated
-with check (public.is_active_employee() and created_by = (select auth.uid()));
-
 create policy "participants read participant list"
 on public.conversation_participants for select to authenticated
 using (public.is_conversation_member(conversation_id));
@@ -208,7 +204,7 @@ revoke all on public.employee_profiles, public.conversations,
   public.conversation_participants, public.messages from anon;
 grant select on public.employee_profiles, public.conversations,
   public.conversation_participants, public.messages to authenticated;
-grant insert on public.conversations, public.messages to authenticated;
+grant insert on public.messages to authenticated;
 
 revoke all on function public.sync_employee_profile() from public, anon, authenticated;
 revoke all on function public.is_active_employee() from public, anon;
@@ -234,6 +230,8 @@ create index if not exists employee_creation_audit_actor_time_idx
 
 alter table public.employee_creation_audit enable row level security;
 revoke all on public.employee_creation_audit from anon, authenticated, public;
+grant select, update on public.employee_profiles to service_role;
+grant select, insert, update on public.employee_creation_audit to service_role;
 
 create or replace function public.reserve_employee_creation_attempt(
   p_actor_id uuid,
