@@ -1,5 +1,5 @@
 -- Run with: supabase test db
--- pgTAP plan is 13 assertions. Run only against a disposable local/test Supabase project.
+-- pgTAP plan is 15 assertions. Run only against a disposable local/test Supabase project.
 begin;
 create extension if not exists pgtap with schema extensions;
 select extensions.plan(15);
