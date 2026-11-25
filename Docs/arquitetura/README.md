@@ -7,13 +7,29 @@ Esta pasta reúne a documentação da arquitetura do UatiAppy, um aplicativo mob
 - [Diagrama de Arquitetura UatiAppy (PDF)](./Diagrama%20de%20Arquitetura%20UatiAppy.pdf) — representação visual da arquitetura mobile.
 - [Fonte PlantUML da arquitetura mobile](./diagrama-arquitetura-mobile.puml) — visão lógica editável dos perfis, aplicativo, backend e persistência.
 
-## Plataforma e stack proposta
+O diagrama deve representar o aplicativo mobile desenvolvido com React Native e Expo. Sempre que a arquitetura mudar, atualize a fonte PlantUML e gere novamente o PDF correspondente antes de considerar o artefato visual sincronizado.
 
-A direção atual do produto é um aplicativo mobile desenvolvido com **JavaScript, React Native e Expo**. O **Visual Studio Code** será utilizado como editor. O backend e a persistência estão propostos com **Supabase e PostgreSQL**; o aplicativo em execução deverá comunicar-se com os serviços por SDK/API, conforme a configuração aprovada.
+## Stack tecnológica definida
 
-Git e GitHub serão utilizados para versionamento, Issues e Pull Requests. GitHub Actions poderá automatizar verificações e processos de CI/CD, conforme configuração futura.
+A equipe confirmou a seguinte stack para o projeto:
 
-A stack e os serviços Supabase efetivamente necessários ainda dependem de validação formal da equipe e do orientador. Auth, RLS, Realtime, tabelas, relacionamentos e políticas devem ser definidos conforme os requisitos do MVP. A Vercel não será tratada como mecanismo de hospedagem ou distribuição do aplicativo mobile nativo; builds e distribuição deverão usar ferramentas compatíveis com Expo/React Native, após definição do fluxo de entrega.
+| Camada / finalidade | Tecnologia |
+|---|---|
+| Aplicativo | Mobile |
+| Linguagem | JavaScript |
+| Framework mobile | React Native |
+| Ferramenta/plataforma de desenvolvimento mobile | Expo |
+| Editor | Visual Studio Code |
+| Backend e banco de dados | Supabase / PostgreSQL |
+| Versionamento e gestão | Git e GitHub |
+| Automação CI/CD | GitHub Actions |
+| Serviços web complementares (se necessários) | Vercel |
+
+O aplicativo será executado nos dispositivos móveis. React Native fornece a camada de interface multiplataforma e Expo apoia o desenvolvimento, testes e geração de builds. A distribuição Android/iOS deverá utilizar um fluxo compatível com Expo/React Native (por exemplo, EAS Build/Submit, quando adotado pela equipe).
+
+O Supabase será utilizado como backend e banco de dados. A aplicação mobile deverá consumir seus recursos por SDK/API, com credenciais e políticas configuradas de forma segura. A seleção e configuração efetiva de Auth, RLS, Realtime, tabelas, relacionamentos, funções e políticas devem seguir os requisitos aprovados; não considerar serviços como implementados apenas por constarem nesta arquitetura.
+
+GitHub Actions será a base prevista para automações e CI/CD, conforme workflows que forem configurados no repositório. A Vercel poderá hospedar serviços web complementares, caso necessários, mas **não hospeda nem distribui diretamente o aplicativo mobile nativo**.
 
 ## Modelo de acesso e gerenciamento de contas
 
@@ -28,4 +44,4 @@ Os procedimentos de provisionamento inicial do Administrador, entrega segura de 
 
 ## Coerência documental
 
-Esta documentação deve permanecer alinhada a [Requisitos e escopo do MVP](../requisitos/escopo-mvp.md). A arquitetura é uma proposta documentada: componentes e serviços ainda não descritos como implementados não devem ser tratados como funcionalidades prontas.
+Esta documentação deve permanecer alinhada a [Requisitos e escopo do MVP](../requisitos/escopo-mvp.md). A stack acima está definida pela equipe; detalhes de implementação e serviços específicos ainda devem ser refinados em Issues e decisões técnicas. Componentes e serviços ainda não implementados não devem ser tratados como funcionalidades prontas.

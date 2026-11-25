@@ -2,57 +2,75 @@
 title UatiAppy — Arquitetura lógica do aplicativo mobile
 
 left to right direction
+skinparam componentStyle rectangle
 
 actor "Administrador" as Admin
 actor "Funcionário" as Employee
 
-node "Dispositivo móvel do Administrador" as AdminDevice {
-  artifact "UatiAppy Mobile\nReact Native / JavaScript" as AdminApp
-}
-node "Dispositivo móvel do Funcionário" as EmployeeDevice {
-  artifact "UatiAppy Mobile\nReact Native / JavaScript" as EmployeeApp
+node "Dispositivo móvel" as Device {
+  artifact "UatiAppy Mobile\nReact Native + Expo\nJavaScript" as App
 }
 
-cloud "Backend como serviço\nSupabase (proposto)" as Backend {
-  component "Autenticação" as Auth
-  component "Autorização por perfil e status" as Access
-  component "Gerenciamento administrativo de contas" as Accounts
-  component "Conversas e mensagens" as Chat
+cloud "Supabase — backend como serviço" as Supabase {
+  component "Serviços/API do Supabase\n(consumidos via SDK/API)" as Api
+  component "Supabase Auth\n(se selecionado e configurado)" as Auth
+  component "Serviço administrativo seguro\n(a definir no servidor)" as AdminService
   database "PostgreSQL" as DB
+  note right of DB
+    Políticas de acesso/RLS,
+    se adotadas, são aplicadas
+    no banco de dados.
+  end note
 }
 
-Admin --> AdminApp
-Employee --> EmployeeApp
-AdminApp --> Auth : autenticar Administrador
-EmployeeApp --> Auth : login do Funcionário
-AdminApp --> Access : validar perfil
-EmployeeApp --> Access : validar perfil e status
-AdminApp --> Accounts : criar conta / definir senha inicial\nredefinir senha / bloquear / desativar
-EmployeeApp --> Chat : conversas / mensagens
-Auth --> DB : dados de autenticação (conforme configuração)
-Access --> DB : perfil e status da conta
-Accounts --> DB : persistir alterações
-Chat --> DB : persistir e consultar mensagens
+Admin --> App
+Employee --> App
+App --> Api : SDK/API — HTTPS
+Api --> DB : operações de dados
+Api --> Auth : autenticação (se adotada)
+Auth --> DB : identidade e sessão
 
-note right of Accounts
-  Operações exclusivas do Administrador.
-  A senha inicial e a nova senha são definidas
-  pela administração e entregues ao funcionário
-  por procedimento apropriado e seguro.
+AdminService --> Api : operações administrativas privilegiadas\npor API segura no servidor
+Api --> DB : operações autorizadas e políticas RLS
+
+note right of AdminService
+  Operações privilegiadas, como criar
+  contas e redefinir credenciais,
+  devem ocorrer somente no servidor.
+  Nunca incluir service_role ou
+  segredos privilegiados no aplicativo.
+  O mecanismo específico ainda
+  não foi escolhido.
 end note
 
-note bottom of Access
+note bottom of App
+  Administrador gerencia contas conforme
+  permissões definidas no backend.
   Funcionário não realiza autocadastro,
-  alteração ou redefinição de senha.
-  Contas bloqueadas ou desativadas não acessam.
-  Regras devem ser validadas no backend.
+  alteração ou redefinição autônoma de senha.
+  Contas bloqueadas/desativadas não devem
+  acessar os recursos protegidos.
+end note
+
+cloud "GitHub" as GitHub {
+  component "Repositório e gestão\nIssues / Pull Requests" as Repo
+  component "GitHub Actions\n(workflows de CI/CD)" as Actions
+}
+Repo --> Actions : eventos do repositório
+Actions ..> App : verificações/builds\nconforme workflows configurados
+
+cloud "Vercel (opcional)" as Vercel
+Vercel ..> App : eventual serviço web complementar
+note bottom of Vercel
+  Não hospeda nem distribui
+  o aplicativo mobile nativo.
 end note
 
 note bottom
-  Stack mobile proposta: JavaScript, React Native e Expo.
-  Supabase/PostgreSQL é a base backend proposta, mas os
-  serviços concretos (Auth, RLS, Realtime etc.) devem ser
-  selecionados conforme os requisitos. GitHub Actions
-  atende à automação; Vercel não distribui o app nativo.
+  Stack principal confirmada pela equipe:
+  JavaScript, React Native, Expo, Supabase/PostgreSQL.
+  Recursos específicos do Supabase, serviço administrativo
+  seguro e fluxo de build/distribuição ainda serão detalhados.
+  EAS é uma alternativa a avaliar, não uma adoção confirmada.
 end note
 @enduml
