@@ -16,8 +16,8 @@ Requisitos funcionais descrevem os serviços e comportamentos que o sistema deve
 
 | ID | Requisito | Prioridade | Escopo |
 |---|---|---|---|
-| RF-001 | O sistema deve permitir o cadastro de novos usuários. | Alta | MVP |
-| RF-002 | O sistema deve permitir que usuários cadastrados realizem login. | Alta | MVP |
+| RF-001 | O sistema deve permitir que um usuário com perfil Administrador cadastre contas de funcionários. | Alta | MVP |
+| RF-002 | O sistema deve permitir que funcionários com contas ativas realizem login com as credenciais fornecidas pela administração. | Alta | MVP |
 | RF-003 | O sistema deve permitir visualizar informações básicas do próprio perfil e identificar os participantes de uma conversa. | Alta | MVP |
 | RF-004 | O sistema deve permitir iniciar ou acessar uma conversa individual entre dois usuários. | Alta | MVP |
 | RF-005 | O sistema deve permitir enviar mensagens de texto em uma conversa individual. | Alta | MVP |
@@ -28,9 +28,16 @@ Requisitos funcionais descrevem os serviços e comportamentos que o sistema deve
 | RF-010 | O sistema deve apresentar o estado de envio/recebimento/entrega da mensagem, conforme as confirmações suportadas pela aplicação. | Alta | MVP |
 | RF-011 | O sistema deve informar quando ocorrer falha no envio de uma mensagem. | Alta | MVP |
 | RF-012 | O sistema deve permitir encerrar a sessão do usuário (logout). | Média | MVP |
+| RF-013 | O sistema deve disponibilizar uma área administrativa exclusiva para usuários com perfil Administrador. | Alta | MVP |
+| RF-014 | O sistema deve permitir que o Administrador defina a senha inicial e redefina a senha de funcionários. | Alta | MVP |
+| RF-015 | O sistema deve permitir que o Administrador bloqueie ou desative contas de funcionários. | Alta | MVP |
 
 ### 2.1 Observações sobre os RFs
 
+- O RF-001 não representa cadastro público: a criação das contas é restrita ao perfil Administrador.
+- O RF-002 aplica-se a contas ativas. Contas bloqueadas ou desativadas não devem conseguir autenticar-se.
+- Os RF-013 a RF-015 descrevem operações administrativas; não implicam que já exista uma interface ou integração implementada.
+- A administração define a senha inicial, entrega as credenciais ao funcionário e também define uma nova senha quando solicitada. O funcionário não realiza cadastro, alteração ou redefinição de senha por conta própria.
 - O RF-003 cobre apenas identificação e informações básicas necessárias à comunicação. Edição avançada de perfil e foto não estão assumidas como parte do MVP.
 - No RF-010, a equipe deve definir precisamente o significado de cada estado (por exemplo, enviado ao servidor, recebido pelo dispositivo destinatário e entregue à conversa). Não presumir confirmação de leitura: ela não está definida no escopo atual.
 - O envio e recebimento em tempo real é uma expectativa de experiência do produto, mas a tecnologia e o mecanismo de atualização ainda dependem da decisão arquitetural.
@@ -51,6 +58,8 @@ Requisitos não funcionais estabelecem atributos de qualidade e restrições de 
 | RNF-008 | Manutenibilidade | O código deve ser organizado em componentes/módulos com responsabilidades claras e convenções documentadas. | Revisar estrutura, padrões de código e legibilidade em pull requests. |
 | RNF-009 | Consistência de estado | O estado apresentado para uma mensagem deve refletir as confirmações efetivamente recebidas pelo sistema. | Testar sucesso, atraso, falha e reconexão; documentar transições permitidas. |
 | RNF-010 | Proteção de credenciais | Credenciais não devem ser armazenadas ou transmitidas de forma desprotegida. | Revisar implementação de autenticação, armazenamento de senhas e configuração de transporte seguro. |
+| RNF-011 | Autorização por perfil | Operações administrativas devem ser acessíveis somente a contas com perfil Administrador; funcionários devem acessar apenas as funcionalidades autorizadas ao seu perfil. | Testar tentativas de acesso direto às rotas e operações administrativas com conta de funcionário e sem autenticação. |
+| RNF-012 | Estado da conta | Contas bloqueadas ou desativadas não devem autenticar-se nem acessar funcionalidades protegidas. | Testar login e sessões existentes após bloqueio/desativação; definir o comportamento de revogação de sessões. |
 
 **Importante:** os RNFs acima são requisitos qualitativos iniciais. Não foram atribuídos números arbitrários (como tempo máximo de resposta ou percentual de disponibilidade). A equipe e o orientador devem definir metas mensuráveis, ambiente e método de medição antes de considerar esses requisitos totalmente verificáveis.
 
@@ -67,6 +76,13 @@ As regras de negócio definem restrições que devem ser respeitadas pelo sistem
 | RN-005 | Somente os participantes da conversa podem consultar suas mensagens. |
 | RN-006 | As mensagens devem ser apresentadas em ordem cronológica, respeitando a referência temporal definida pelo sistema. |
 | RN-007 | O estado de uma mensagem deve ser atualizado somente quando houver a confirmação correspondente no fluxo de comunicação. |
+| RN-008 | Somente usuários com perfil Administrador podem criar, gerenciar, bloquear ou desativar contas de funcionários. |
+| RN-009 | O cadastro de funcionários é centralizado na administração; não existe autocadastro de funcionários. |
+| RN-010 | A administração define a senha inicial e fornece as credenciais ao funcionário por um meio apropriado e seguro. |
+| RN-011 | A redefinição de senha é realizada pela administração, que define e fornece uma nova senha ao funcionário após solicitação. |
+| RN-012 | Funcionários não podem alterar nem redefinir a própria senha pelo sistema. |
+| RN-013 | Contas bloqueadas ou desativadas não podem realizar login nem acessar funcionalidades protegidas. |
+| RN-014 | A área de gerenciamento de contas é exclusiva para usuários autenticados com perfil Administrador. |
 
 ## 5. Escopo do MVP
 
@@ -74,8 +90,12 @@ O MVP (Produto Mínimo Viável) contempla o conjunto mínimo de funcionalidades 
 
 ### 5.1 Dentro do MVP
 
-- Cadastro de usuário.
-- Login e logout.
+- Cadastro administrativo de contas de funcionários.
+- Área administrativa exclusiva para gerenciamento de contas.
+- Definição de senha inicial e redefinição administrativa de senha.
+- Bloqueio e desativação de contas pela administração.
+- Login e logout de funcionários com contas ativas.
+- Autorização de funcionalidades conforme o perfil (Administrador ou Funcionário).
 - Identificação básica dos participantes.
 - Criação ou acesso a conversas individuais entre dois usuários.
 - Envio e recebimento de mensagens de texto.
@@ -99,20 +119,30 @@ Os itens abaixo não devem ser considerados tarefas obrigatórias da primeira en
 
 ## 6. Fluxo principal resumido
 
-1. O usuário realiza cadastro ou autentica-se.
-2. O usuário localiza ou acessa o outro participante e abre uma conversa individual.
-3. O usuário escreve e envia uma mensagem de texto.
-4. O sistema valida a sessão e a autorização, registra a mensagem e associa o conteúdo ao autor e à conversa.
-5. O sistema disponibiliza a mensagem ao outro participante e atualiza o estado conforme as confirmações recebidas.
-6. Os participantes consultam o histórico em ordem cronológica.
-7. Se ocorrer falha, o sistema informa o remetente sem indicar sucesso indevidamente.
+1. A administração acessa a área administrativa autenticada.
+2. A administração cadastra o funcionário, define a senha inicial e fornece as credenciais.
+3. O funcionário autentica-se com a conta ativa recebida.
+4. O funcionário localiza ou acessa o outro participante e abre uma conversa individual.
+5. O funcionário escreve e envia uma mensagem de texto.
+6. O sistema valida a sessão e a autorização, registra a mensagem e associa o conteúdo ao autor e à conversa.
+7. O sistema disponibiliza a mensagem ao outro participante e atualiza o estado conforme as confirmações recebidas.
+8. Os participantes consultam o histórico em ordem cronológica.
+9. Se o funcionário perder a senha, solicita à administração uma redefinição; a administração define e fornece uma nova senha.
+10. A administração pode bloquear ou desativar uma conta; contas nesses estados não podem acessar o sistema.
+11. Se ocorrer falha no envio, o sistema informa o remetente sem indicar sucesso indevidamente.
 
 ## 7. Critérios gerais de aceite do MVP
 
 O MVP poderá ser considerado funcional quando, no mínimo:
 
-- Dois usuários distintos conseguirem autenticar-se.
-- Um usuário conseguir abrir uma conversa individual com o outro.
+- Um Administrador conseguir acessar a área administrativa e cadastrar uma conta de funcionário.
+- A administração conseguir definir e fornecer a senha inicial e redefinir a senha de um funcionário.
+- Um funcionário com conta ativa conseguir autenticar-se com as credenciais fornecidas.
+- Não existir fluxo de autocadastro nem de alteração/redefinição de senha pelo funcionário.
+- A administração conseguir bloquear ou desativar uma conta.
+- Contas bloqueadas ou desativadas não conseguirem autenticar-se nem acessar funcionalidades protegidas.
+- Uma conta de funcionário não conseguir acessar a área ou as operações administrativas.
+- Dois funcionários distintos conseguirem autenticar-se.
 - Uma mensagem de texto enviada for associada ao autor e à conversa correta.
 - O destinatário conseguir receber e consultar a mensagem.
 - O histórico permanecer disponível após nova autenticação.
@@ -132,7 +162,8 @@ Sugestão de rastreabilidade inicial:
 
 | Área de trabalho | Requisitos relacionados |
 |---|---|
-| Cadastro, login e logout | RF-001, RF-002, RF-012, RNF-003, RNF-010, RN-001, RN-002 |
+| Gerenciamento administrativo de contas | RF-001, RF-002, RF-013, RF-014, RF-015, RNF-003, RNF-010, RNF-011, RNF-012, RN-001, RN-008 a RN-014 |
+| Login e logout | RF-002, RF-012, RNF-003, RNF-010, RNF-012, RN-001, RN-002, RN-013 |
 | Perfil e identificação | RF-003 |
 | Conversas individuais e autorização | RF-004, RNF-004, RN-003, RN-005 |
 | Envio e recebimento de mensagens | RF-005, RF-006, RF-011, RNF-002, RNF-009, RN-004, RN-007 |
@@ -143,7 +174,11 @@ Antes de iniciar uma implementação, a equipe deve conferir se já existe uma I
 
 ## 9. Pendências para validação da equipe e do orientador
 
-- Confirmar os campos obrigatórios e a identificação única usada no cadastro.
+- Confirmar os campos obrigatórios e a identificação única usada no cadastro de funcionários.
+- Definir como a administração será provisionada inicialmente e como será protegido o primeiro acesso administrativo.
+- Definir o meio seguro de entrega das credenciais e o procedimento operacional de redefinição de senha.
+- Definir se o bloqueio é temporário, quais ações o revertem e como a desativação difere operacionalmente do bloqueio.
+- Definir se a administração poderá reativar contas desativadas e como sessões ativas serão encerradas após bloqueio/desativação.
 - Definir quais informações compõem o perfil básico.
 - Definir como o usuário localizará o outro participante.
 - Confirmar o significado e as transições dos estados da mensagem.
@@ -171,7 +206,7 @@ A equipe definiu cinco diagramas estruturais: Classes, Componentes, Perfis, Obje
 
 **Objetivo:** representar as principais entidades do domínio e seus relacionamentos. A proposta abaixo contém apenas Usuário, Conversa e Mensagem, compatíveis com os requisitos atuais.
 
-**Rastreabilidade:** RF-003 a RF-009; RN-001, RN-003 a RN-007; RNF-004 e RNF-007.
+**Rastreabilidade:** RF-001 a RF-009 e RF-013 a RF-015; RN-001 e RN-003 a RN-014; RNF-004, RNF-007, RNF-011 e RNF-012.
 
 ```plantuml
 @startuml
@@ -180,6 +215,19 @@ title UatiAppy - Diagrama de Classes (proposta inicial)
 class Usuario {
   identificadorUnico : String
   informacoesBasicas : String
+  perfil : PerfilAcesso
+  statusConta : StatusConta
+}
+
+enum PerfilAcesso {
+  ADMINISTRADOR
+  FUNCIONARIO
+}
+
+enum StatusConta {
+  ATIVA
+  BLOQUEADA
+  DESATIVADA
 }
 
 class Conversa {
@@ -196,6 +244,13 @@ class Mensagem {
 Conversa "0..*" -- "2" Usuario : participantes
 Conversa "1" -- "0..*" Mensagem : historico
 Usuario "1" -- "0..*" Mensagem : autor
+
+note right of Usuario
+  O perfil Administrador possui acesso
+  à área exclusiva de gerenciamento.
+  Funcionários não gerenciam contas
+  nem alteram a própria senha.
+end note
 
 note right of Conversa
   Conversa individual:
@@ -219,13 +274,17 @@ end note
 @startuml
 title UatiAppy - Diagrama de Componentes (visao logica)
 
-component "Interface da Aplicacao" as UI
-component "Responsabilidade de Autenticacao" as AUTH
+component "Interface Web" as UI
+component "Area Administrativa" as ADMINUI
+component "Responsabilidade de Autenticacao e Autorizacao" as AUTH
 component "Responsabilidade de Conversas" as CONV
 component "Responsabilidade de Mensagens" as MSG
 database "Repositorio de Dados" as DATA
 
-UI --> AUTH : cadastro / login / logout
+UI --> AUTH : login / logout de funcionario
+UI --> ADMINUI : acesso conforme perfil
+ADMINUI --> AUTH : validar perfil Administrador
+ADMINUI --> DATA : criar / redefinir / bloquear / desativar conta
 UI --> CONV : abrir conversa / consultar historico
 UI --> MSG : enviar / receber mensagem
 AUTH --> DATA : dados de usuario
@@ -233,9 +292,10 @@ CONV --> DATA : dados de conversa
 MSG --> DATA : mensagens
 
 note bottom
-  Divisao conceitual para discussao.
-  A arquitetura e as tecnologias concretas
-  ainda precisam ser definidas.
+  Divisao conceitual para aplicacao web.
+  A area administrativa e protegida por autorizacao
+  no backend; ocultar menus na interface nao basta.
+  Tecnologias concretas ainda precisam ser validadas.
 end note
 @enduml
 ```
@@ -334,25 +394,38 @@ end note
 @startuml
 title UatiAppy - Diagrama de Implantacao (visao conceitual)
 
-node "Dispositivo do Usuario" as DEVICE {
-  artifact "Aplicacao UatiAppy" as APP
+node "Dispositivo do Administrador" as ADMINDEVICE {
+  artifact "Navegador / Area Administrativa" as ADMINBROWSER
+}
+node "Dispositivo do Funcionario" as USERDEVICE {
+  artifact "Navegador / Aplicacao Web" as USERBROWSER
+}
+node "Hospedagem da Aplicacao Web" as WEBHOST {
+  artifact "Aplicacao Web UatiAppy" as WEBAPP
+}
+node "Backend / Servicos" as BACKEND {
+  artifact "Autenticacao e Autorizacao" as AUTH
+  artifact "Regras de Gerenciamento de Contas" as ACCOUNT
+  artifact "Servicos de Conversas e Mensagens" as CHAT
+}
+node "Persistencia" as STORAGE {
+  database "Dados de Usuarios, Perfis, Status, Conversas e Mensagens" as DB
 }
 
-node "Ambiente de Execucao do Sistema" as SERVER {
-  artifact "Logica da Aplicacao" as LOGIC
-}
-
-node "Ambiente de Persistencia" as STORAGE {
-  database "Dados de Usuarios, Conversas e Mensagens" as DB
-}
-
-APP --> LOGIC : requisicoes e respostas
-LOGIC --> DB : leitura e gravacao
+ADMINBROWSER --> WEBAPP : HTTPS
+USERBROWSER --> WEBAPP : HTTPS
+WEBAPP --> AUTH : autenticacao e verificacao de perfil
+WEBAPP --> ACCOUNT : operacoes administrativas autorizadas
+WEBAPP --> CHAT : operacoes de comunicacao
+AUTH --> DB : validar conta, perfil e status
+ACCOUNT --> DB : criar / atualizar contas
+CHAT --> DB : leitura e gravacao
 
 note bottom
-  Nos logicos ilustrativos.
-  Hospedagem, tecnologias, topologia
-  e comunicacao ainda nao foram aprovadas.
+  Visao logica de aplicacao web. A tecnologia de frontend,
+  provedor e configuracao concreta de autenticacao ainda
+  dependem da validacao arquitetural. Contas bloqueadas
+  ou desativadas nao podem acessar o sistema.
 end note
 @enduml
 ```
@@ -363,20 +436,26 @@ A equipe definiu cinco diagramas comportamentais: Casos de Uso (principal), Máq
 
 #### 10.2.1 Diagrama de Casos de Uso — principal
 
-**Objetivo:** apresentar os atores e as funcionalidades que compõem o escopo do MVP. O ator genérico Usuário representa qualquer participante autenticado; a diferenciação entre aluno e professor poderá ser detalhada se fizer parte das regras confirmadas do produto.
+**Objetivo:** apresentar os atores e as funcionalidades do MVP. Administrador e Funcionário possuem perfis distintos; a administração gerencia contas e os funcionários utilizam as funcionalidades de comunicação. A redefinição de senha é um procedimento administrativo, não um fluxo de autoatendimento.
 
-**Rastreabilidade:** RF-001 a RF-012; RN-001 a RN-005.
+**Rastreabilidade:** RF-001 a RF-015; RN-001 a RN-014; RNF-011 e RNF-012.
 
 ```plantuml
 @startuml
 left to right direction
 title UatiAppy - Diagrama de Casos de Uso
 
-actor Usuario
+actor Funcionario
+actor Administrador
 
 rectangle UatiAppy {
-  usecase "Cadastrar-se" as UC1
   usecase "Realizar login" as UC2
+  usecase "Gerenciar contas de funcionarios" as UCA1
+  usecase "Cadastrar funcionario" as UCA2
+  usecase "Definir senha inicial" as UCA3
+  usecase "Redefinir senha" as UCA4
+  usecase "Bloquear conta" as UCA5
+  usecase "Desativar conta" as UCA6
   usecase "Visualizar perfil basico" as UC3
   usecase "Iniciar ou acessar
 conversa individual" as UC4
@@ -392,16 +471,24 @@ de envio" as UC9
   usecase "Realizar logout" as UC10
 }
 
-Usuario -- UC1
-Usuario -- UC2
-Usuario -- UC3
-Usuario -- UC4
-Usuario -- UC5
-Usuario -- UC6
-Usuario -- UC7
-Usuario -- UC8
-Usuario -- UC9
-Usuario -- UC10
+Funcionario -- UC2
+Funcionario -- UC3
+Funcionario -- UC4
+Funcionario -- UC5
+Funcionario -- UC6
+Funcionario -- UC7
+Funcionario -- UC8
+Funcionario -- UC9
+Funcionario -- UC10
+Administrador -- UC2
+Administrador -- UCA1
+Administrador -- UCA2
+Administrador -- UCA3
+Administrador -- UCA4
+Administrador -- UCA5
+Administrador -- UCA6
+UCA1 .> UCA2 : <<include>>
+UCA1 .> UCA3 : <<include>>
 @enduml
 ```
 
@@ -536,7 +623,7 @@ ref over Usuario, App : Logout
 | Componentes | RF-001 a RF-012; RNF-003, RNF-004, RNF-008 e RNF-010 |
 | Perfis | RF-003 a RF-009; RN-001, RN-003 e RN-004 |
 | Objetos | RF-004 a RF-009; RN-003, RN-004 e RN-006 |
-| Implantação | RNF-002, RNF-003, RNF-005, RNF-006 e RNF-010 |
+| Implantação | RNF-002, RNF-003, RNF-005, RNF-006, RNF-010, RNF-011 e RNF-012; RN-008 a RN-014 |
 | Casos de Uso | RF-001 a RF-012; RN-001 a RN-005 |
 | Máquina de Estados | RF-005 a RF-007, RF-010 e RF-011; RN-004 e RN-007; RNF-009 |
 | Comunicação | RF-005 a RF-007, RF-010 e RF-011; RN-002, RN-004, RN-005 e RN-007 |
@@ -545,12 +632,12 @@ ref over Usuario, App : Logout
 
 ### 10.4 Pendências específicas dos diagramas
 
-- Validar com o PO os atores e os casos de uso, inclusive se aluno e professor devem aparecer como especializações de Usuário.
+- Validar com o PO os atores Administrador e Funcionário e os limites de acesso de cada perfil.
 - Confirmar o modelo de domínio, atributos e multiplicidades do diagrama de classes.
 - Revisar a divisão lógica de componentes com base na arquitetura que a equipe vier a escolher.
 - Validar a sintaxe e a aplicação do perfil UML, incluindo estereótipos e metaclasses estendidas.
 - Substituir os valores ilustrativos do diagrama de objetos por um cenário acadêmico aprovado, sem usar dados pessoais reais.
-- Atualizar o diagrama de implantação após a definição de tecnologias, ambientes e hospedagem.
+- Atualizar o diagrama de implantação após a definição final de tecnologias, ambientes e hospedagem; a visão atual é web e conceitual.
 - Definir os estados oficiais da mensagem, eventos, transições e confirmações.
 - Confirmar se a entrega ao destinatário depende de ele estar online e como essa condição será identificada.
 - Revisar a visão geral de interação e ajustar sua notação ao padrão de modelagem adotado pela equipe.
@@ -558,7 +645,7 @@ ref over Usuario, App : Logout
 
 ## 11. Controle de alterações
 
-Esta é uma versão inicial consolidada para revisão. Alterações de escopo devem ser discutidas com o PO, avaliadas tecnicamente pelo TechLead, comunicadas à equipe e submetidas à validação do orientador quando necessário.
+Esta versão incorpora as decisões de negócio informadas pelo PO em 25/11/2026: cadastro centralizado pela administração; senha inicial definida pela administração; redefinição de senha feita pela administração; bloqueio/desativação de contas pela administração; perfil Administrador com área exclusiva. A plataforma em discussão foi direcionada para aplicação web, mas tecnologias específicas e procedimentos operacionais ainda dependem de validação. Alterações de escopo devem ser discutidas com o PO, avaliadas tecnicamente pelo TechLead, comunicadas à equipe e submetidas à validação do orientador quando necessário.
 
 ---
 **UatiAppy — documentação de requisitos e escopo do MVP.**
