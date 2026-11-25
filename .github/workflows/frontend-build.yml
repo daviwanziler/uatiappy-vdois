@@ -24,5 +24,11 @@ jobs:
       - name: Run unit tests
         run: npm test
 
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+
+      - name: Test Edge Function security helpers
+        run: deno test --allow-env supabase/functions/tests/security_test.ts
+
       - name: Build frontend
         run: npm run build
