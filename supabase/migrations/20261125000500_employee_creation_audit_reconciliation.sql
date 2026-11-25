@@ -22,6 +22,8 @@ begin
   select u.id into v_user_id
   from auth.users u
   where encode(extensions.digest(lower(btrim(u.email)), 'sha256'), 'hex') = p_email_sha256
+    and u.raw_app_meta_data ->> 'provisioned_by_admin' = 'true'
+    and u.raw_app_meta_data ->> 'role' = 'FUNCIONARIO'
   order by u.created_at desc
   limit 1;
 
@@ -55,13 +57,20 @@ begin
     raise exception 'Identificadores obrigatórios.';
   end if;
 
-  update public.employee_creation_audit
+  update public.employee_creation_audit a
   set account_user_id = p_account_user_id,
       outcome = 'SUCCESS',
       detail_code = 'ACCOUNT_CREATED',
       finished_at = now()
-  where id = p_attempt_id
-    and outcome = 'PENDING';
+  where a.id = p_attempt_id
+    and a.outcome = 'PENDING'
+    and exists (
+      select 1 from auth.users u
+      where u.id = p_account_user_id
+        and encode(extensions.digest(lower(btrim(u.email)), 'sha256'), 'hex') = a.email_sha256
+        and u.raw_app_meta_data ->> 'provisioned_by_admin' = 'true'
+        and u.raw_app_meta_data ->> 'role' = 'FUNCIONARIO'
+    );
 
   if not found then
     -- Idempotent retry: accept only if this exact attempt already records this user.
@@ -94,7 +103,9 @@ begin
   from auth.users u
   where a.outcome = 'PENDING'
     and a.email_sha256 is not null
-    and encode(extensions.digest(lower(btrim(u.email)), 'sha256'), 'hex') = a.email_sha256;
+    and encode(extensions.digest(lower(btrim(u.email)), 'sha256'), 'hex') = a.email_sha256
+    and u.raw_app_meta_data ->> 'provisioned_by_admin' = 'true'
+    and u.raw_app_meta_data ->> 'role' = 'FUNCIONARIO';
 
   update public.employee_creation_audit
   set outcome = 'FAILURE',
