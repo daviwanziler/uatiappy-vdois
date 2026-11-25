@@ -19,5 +19,8 @@
     "react-native": "0.88.1",
     "react-native-url-polyfill": "^2.0.0"
   },
-  "engines": { "node": ">=22.13.0" }
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "type": "module"
 }
