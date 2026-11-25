@@ -7,15 +7,15 @@ actor "Administrador" as Admin
 actor "Funcionário" as Employee
 
 node "Dispositivo móvel do Administrador" as AdminDevice {
-  artifact "UatiAppy Mobile\nReact Native / JavaScript" as AdminApp
+  artifact "UatiAppy Mobile\nReact Native + Expo\nJavaScript" as AdminApp
 }
 node "Dispositivo móvel do Funcionário" as EmployeeDevice {
-  artifact "UatiAppy Mobile\nReact Native / JavaScript" as EmployeeApp
+  artifact "UatiAppy Mobile\nReact Native + Expo\nJavaScript" as EmployeeApp
 }
 
-cloud "Backend como serviço\nSupabase (proposto)" as Backend {
-  component "Autenticação" as Auth
-  component "Autorização por perfil e status" as Access
+cloud "Backend como serviço\nSupabase" as Backend {
+  component "Autenticação\n(se habilitada/configurada)" as Auth
+  component "Autorização por perfil e status\n(policies/RLS conforme requisitos)" as Access
   component "Gerenciamento administrativo de contas" as Accounts
   component "Conversas e mensagens" as Chat
   database "PostgreSQL" as DB
@@ -45,14 +45,17 @@ note bottom of Access
   Funcionário não realiza autocadastro,
   alteração ou redefinição de senha.
   Contas bloqueadas ou desativadas não acessam.
-  Regras devem ser validadas no backend.
+  Regras devem ser aplicadas e verificadas no backend.
 end note
 
 note bottom
-  Stack mobile proposta: JavaScript, React Native e Expo.
-  Supabase/PostgreSQL é a base backend proposta, mas os
-  serviços concretos (Auth, RLS, Realtime etc.) devem ser
-  selecionados conforme os requisitos. GitHub Actions
-  atende à automação; Vercel não distribui o app nativo.
+  Stack mobile definida: JavaScript, React Native e Expo.
+  Supabase/PostgreSQL é o backend e banco de dados.
+  GitHub gerencia código e trabalho; GitHub Actions
+  automatiza CI/CD conforme workflows configurados.
+  Vercel é opcional para serviços web complementares;
+  não hospeda nem distribui o app mobile nativo.
+  Build e distribuição mobile usam fluxo compatível
+  com Expo/React Native (EAS, se adotado).
 end note
 @enduml
