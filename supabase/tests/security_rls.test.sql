@@ -126,8 +126,8 @@ select extensions.ok(
   'anon role has no SQL UPDATE privilege on employee_profiles'
 );
 select extensions.throws_ok(
-  $update public.employee_profiles set role = 'ADMINISTRADOR'
-    where user_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'$,
+  $$update public.employee_profiles set role = 'ADMINISTRADOR'
+    where user_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'$$,
   '42501', null, 'direct API update cannot promote employee to administrator'
 );
 select extensions.is(
