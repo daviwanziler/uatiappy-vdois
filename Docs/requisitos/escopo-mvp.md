@@ -420,11 +420,11 @@ CHAT --> DB : leitura e gravação
 
 note bottom
   Visão lógica mobile. JavaScript, React Native e Expo
-  compõem a stack mobile proposta. Supabase/PostgreSQL
-  são a base backend proposta, sujeitos à validação dos
-  serviços necessários. Vercel não é plataforma de distribuição
-  do aplicativo mobile nativo. Contas bloqueadas/desativadas
-  não podem acessar o sistema.
+  compõem a stack mobile confirmada pela equipe. Supabase/PostgreSQL
+  são a base de backend definida; os serviços necessários ainda
+  serão selecionados conforme os requisitos. Vercel não é plataforma
+  de distribuição do aplicativo mobile nativo. Contas bloqueadas/
+  desativadas não podem acessar o sistema.
 end note
 @enduml
 ```
