@@ -1,8 +1,8 @@
 -- Run with: supabase test db
--- pgTAP plan is 19 assertions. Run only against a disposable local/test Supabase project.
+-- pgTAP plan is 23 assertions. Run only against a disposable local/test Supabase project.
 begin;
 create extension if not exists pgtap with schema extensions;
-select extensions.plan(19);
+select extensions.plan(23);
 
 \set user_a 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
 \set user_b 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
@@ -35,6 +35,34 @@ values
    '{"provider":"email","providers":["email"],"role":"FUNCIONARIO","provisioned_by_admin":true}', '{}', now(), now()),
   (:'unprovisioned_user', 'authenticated', 'authenticated', 'unprovisioned@uatiappy.test', '', now(),
    '{"provider":"email","providers":["email"]}', '{"role":"ADMINISTRADOR"}', now(), now());
+
+-- Simulate Auth account creation succeeding while the audit remains pending.
+insert into public.employee_creation_audit(actor_id, email_sha256, outcome, detail_code)
+values (
+  :'user_a',
+  encode(extensions.digest('a@uatiappy.test', 'sha256'), 'hex'),
+  'PENDING',
+  'SIMULATED_AUDIT_FINALIZE_FAILURE'
+);
+select extensions.is(
+  public.reconcile_employee_creation_by_email_hash(encode(extensions.digest('a@uatiappy.test', 'sha256'), 'hex')),
+  :'user_a'::uuid,
+  'reconciliation locates the already-created Auth account by normalized email hash'
+);
+select extensions.is(
+  (select outcome from public.employee_creation_audit
+   where email_sha256 = encode(extensions.digest('a@uatiappy.test', 'sha256'), 'hex')
+   order by created_at desc limit 1),
+  'SUCCESS',
+  'reconciliation changes the pending audit to SUCCESS'
+);
+select extensions.is(
+  (select account_user_id from public.employee_creation_audit
+   where email_sha256 = encode(extensions.digest('a@uatiappy.test', 'sha256'), 'hex')
+   order by created_at desc limit 1),
+  :'user_a'::uuid,
+  'reconciliation stores the created Auth user id for traceability'
+);
 
 insert into public.conversations(id, created_by) values
   (:'conversation_a', :'user_a'), (:'conversation_b', :'user_b');
@@ -92,6 +120,10 @@ select extensions.is((select count(*)::int from public.messages), 2, 'user B see
 select extensions.ok(
   not has_table_privilege('authenticated', 'public.employee_profiles', 'UPDATE'),
   'authenticated role has no SQL UPDATE privilege on employee_profiles'
+);
+select extensions.ok(
+  not has_table_privilege('anon', 'public.employee_profiles', 'UPDATE'),
+  'anon role has no SQL UPDATE privilege on employee_profiles'
 );
 select extensions.throws_ok(
   $update public.employee_profiles set role = 'ADMINISTRADOR'
