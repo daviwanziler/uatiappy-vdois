@@ -43,8 +43,16 @@ export default function CreateEmployeeScreen() {
     try {
       const { data, error } = await createEmployeeAccount({ email, password })
       if (error) setErrorMessage(error.message || 'Não foi possível criar a conta.')
-      else {
-        setFeedback('Conta criada para ' + data.email + '. Entregue as credenciais por um canal seguro.')
+      else if (data?.auditStatus === 'PENDING_RECONCILIATION') {
+        setErrorMessage('')
+        setFeedback('A conta foi criada, mas a auditoria está sendo reconciliada. NÃO tente cadastrar novamente. A rotina automática verificará o registro.')
+        setEmail('')
+        setPassword('')
+        setConfirmPassword('')
+      } else {
+        setFeedback(data?.recovered
+          ? 'A conta já existia e a auditoria foi reconciliada. Nenhuma conta duplicada foi criada.'
+          : 'Conta criada para ' + data.email + '. Entregue as credenciais por um canal seguro.')
         setEmail('')
         setPassword('')
         setConfirmPassword('')
