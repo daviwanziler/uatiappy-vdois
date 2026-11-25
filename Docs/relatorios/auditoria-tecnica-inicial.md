@@ -1,0 +1,70 @@
+# Auditoria técnica inicial — UatiAppy
+
+**Data:** 25/11/2026  
+**Repositório:** daviwanziler/uatiappy-vdois  
+**Branch-base analisada:** `main`  
+**Branch desta auditoria:** `chore/auditoria-inicial`  
+**Status:** diagnóstico preliminar; não representa validação de execução.
+
+## 1. Objetivo
+
+Registrar o estado verificável do repositório antes de iniciar a implementação, preservando a branch `main` e preparando a primeira etapa de bootstrap.
+
+## 2. Evidências verificadas
+
+- A árvore recursiva da branch `main` contém documentação e licença, mas nenhum código-fonte ou manifesto de dependências identificável.
+- Arquivos identificados na raiz: `README.md`, `LICENSE` e diretório `Docs/`.
+- Documentação encontrada:
+  - `Docs/requisitos/escopo-mvp.md`
+  - `Docs/estimativas/proposta-analise-pontos-de-funcao.md`
+  - `Docs/arquitetura/README.md`
+  - `Docs/arquitetura/Diagrama de Arquitetura UatiAppy.pdf`
+- Branches existentes na consulta: `main`, `docs/arquitetura`, `docs/diagramas-uml-mvp` e `docs/requisitos-escopo-mvp`.
+- Pull requests documentais #88, #89, #94 e #95 aparecem integrados.
+- A Issue #55 (definição de arquitetura e padrões técnicos) está fechada e afirma que a stack foi definida e aprovada, mas o corpo consultado não registra os nomes das tecnologias.
+- As Issues #90 e #91 detalham cadastro e autenticação/sessão; a #92 trata persistência e consulta de mensagens; a #93 trata apresentação cronológica e estados.
+- A Issue #58 acompanha a entrega integrada de cadastro/login/logout; a #61 acompanha conversas e histórico; a #62 trata atualização em tempo real.
+
+## 3. Escopo funcional documentado
+
+O MVP documentado contempla cadastro, login/logout, identificação básica, conversas individuais, mensagens de texto, persistência, histórico, ordenação cronológica, estados de mensagem e controle de acesso.
+
+Conversas em grupo, anexos, edição/exclusão de mensagens, notificações push e recursos avançados de perfil estão fora do MVP inicial, salvo mudança de escopo aprovada.
+
+## 4. Diagnóstico
+
+**Conclusão:** o repositório está em estágio de documentação e planejamento. Não foi identificado código-fonte da aplicação na branch `main`; portanto, ainda não é possível avaliar compilação, execução, testes, cobertura, segurança implementada ou percentual de conclusão funcional.
+
+A ausência de código na `main` não prova que não exista código em outro repositório, computador ou branch não consultada. Esta conclusão limita-se à árvore da branch principal inspecionada.
+
+## 5. Bloqueios e pendências antes do bootstrap
+
+1. Ler o conteúdo do PDF de arquitetura e transcrever as tecnologias aprovadas para frontend, backend, banco de dados e comunicação em tempo real.
+2. Confirmar se existe código em outro local; o responsável informou que, segundo seu conhecimento atual, o código ainda não existe.
+3. Recuperar a estrutura de pastas e convenções de desenvolvimento definidas na Issue #55 ou no diagrama.
+4. Confirmar os campos obrigatórios de cadastro e identificador único com o PO.
+5. Confirmar os estados oficiais de mensagem e suas transições.
+6. Definir arquivo de configuração de ambiente e política de segredos antes de qualquer integração.
+
+## 6. Próxima entrega recomendada
+
+Após validar a stack do diagrama, criar em branch própria o esqueleto mínimo do projeto, incluindo:
+
+- estrutura de diretórios aprovada;
+- arquivos de manifesto e scripts correspondentes à stack escolhida;
+- configuração de ambiente de exemplo sem credenciais;
+- documentação de instalação e execução local;
+- endpoint/tela inicial mínima, somente se compatível com a arquitetura;
+- testes ou verificação automatizada mínima de inicialização.
+
+Não instalar ou introduzir frameworks, banco de dados, provedores de autenticação ou serviços em tempo real antes de confirmar as decisões arquiteturais aprovadas.
+
+## 7. Estratégia de versionamento
+
+- Manter `main` protegida de alterações experimentais.
+- Criar uma branch por entrega.
+- Abrir Pull Request com resumo, requisitos relacionados, critérios de aceite e evidências de teste.
+- Integrar somente após revisão e validação.
+
+---
+Documento preparado como registro da auditoria inicial. As conclusões devem ser atualizadas após leitura integral do diagrama de arquitetura e inspeção do primeiro código-fonte.
