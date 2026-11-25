@@ -2,6 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeadersFor } from '../_shared/cors.ts'
 import { validateEmployeeProvision } from '../_shared/validation.ts'
 import { sha256Email } from '../_shared/audit.ts'
+import { finalizeCreatedAccount } from '../_shared/provisioning.ts'
 
 const json = (body: Record<string, unknown>, headers: Record<string, string>, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -153,20 +154,23 @@ Deno.serve(async (request) => {
     }
 
     accountCreated = true
-    const { error: accountAuditError } = await adminClient.rpc('record_employee_creation_account', {
-      p_attempt_id: reservation.attempt_id,
-      p_account_user_id: data.user.id,
-    })
-    if (accountAuditError) {
-      console.error('employee_created_audit_reconciliation_required', {
+    const auditResult = await finalizeCreatedAccount(async () => {
+      const { error } = await adminClient.rpc('record_employee_creation_account', {
+        p_attempt_id: reservation.attempt_id,
+        p_account_user_id: data.user.id,
+      })
+      if (error) console.error('employee_created_audit_reconciliation_required', {
         attemptId: reservation.attempt_id,
         accountUserId: data.user.id,
-        code: accountAuditError.code,
+        code: error.code,
       })
+      return { error }
+    })
+    if (auditResult.auditStatus === 'PENDING_RECONCILIATION') {
       return json({
         id: data.user.id,
         email: data.user.email,
-        auditStatus: 'PENDING_RECONCILIATION',
+        auditStatus: auditResult.auditStatus,
         message: 'A conta foi criada. O registro de auditoria será reconciliado automaticamente. Não tente criar novamente.',
       }, headers, 202)
     }
