@@ -62,7 +62,7 @@ Deno.serve(async (request) => {
 
   const email = String(payload.email ?? '').trim().toLowerCase()
   const password = String(payload.password ?? '')
-  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || password.length < 8) {
+  if (!/^[^\s@]+@[^\s@]+\\.[^\s@]+$/.test(email) || password.length < 8) {
     return json({ error: 'Informe e-mail válido e senha com pelo menos 8 caracteres.' }, corsHeaders, 400)
   }
 
