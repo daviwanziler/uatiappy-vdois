@@ -101,8 +101,30 @@ Deno.serve(async (request) => {
       return json({ error: validationError }, headers, 400)
     }
 
-    // Hash the normalized target email; never persist the raw email in the audit table.
+    // Recover an account created by an earlier request whose audit finalization failed.
+    // This check runs before createUser, so retrying the same request cannot create a duplicate.
     const emailHash = await sha256Email(email)
+    const { data: recoveredUserId, error: reconcileError } = await adminClient.rpc(
+      'reconcile_employee_creation_by_email_hash',
+      { p_email_sha256: emailHash },
+    )
+    if (reconcileError) {
+      console.error('employee_creation_reconciliation_check_failed', {
+        attemptId: reservation.attempt_id,
+        code: reconcileError.code,
+      })
+      await finishAttempt('FAILURE', 'RECONCILIATION_CHECK_FAILED')
+      return json({ error: 'Não foi possível verificar com segurança se a conta já existe. Não repita a operação; tente novamente mais tarde.' }, headers, 503)
+    }
+    if (recoveredUserId) {
+      await finishAttempt('SUCCESS', 'EXISTING_ACCOUNT_RECONCILED')
+      return json({
+        id: recoveredUserId,
+        email,
+        recovered: true,
+        message: 'A conta já existia e a auditoria foi reconciliada. Nenhuma conta duplicada foi criada.',
+      }, headers, 200)
+    }
     const { error: hashError } = await adminClient.rpc('set_employee_creation_email_hash', {
       p_attempt_id: reservation.attempt_id,
       p_email_sha256: emailHash,
@@ -129,8 +151,25 @@ Deno.serve(async (request) => {
     }
 
     accountCreated = true
-    await finishAttempt('SUCCESS', 'ACCOUNT_CREATED')
-    return json({ id: data.user.id, email: data.user.email }, headers, 201)
+    const { error: accountAuditError } = await adminClient.rpc('record_employee_creation_account', {
+      p_attempt_id: reservation.attempt_id,
+      p_account_user_id: data.user.id,
+    })
+    if (accountAuditError) {
+      console.error('employee_created_audit_reconciliation_required', {
+        attemptId: reservation.attempt_id,
+        accountUserId: data.user.id,
+        code: accountAuditError.code,
+      })
+      return json({
+        id: data.user.id,
+        email: data.user.email,
+        auditStatus: 'PENDING_RECONCILIATION',
+        message: 'A conta foi criada. O registro de auditoria será reconciliado automaticamente. Não tente criar novamente.',
+      }, headers, 202)
+    }
+    attemptFinished = true
+    return json({ id: data.user.id, email: data.user.email, auditStatus: 'SUCCESS' }, headers, 201)
   } catch (error) {
     console.error('employee_creation_unexpected_failure', {
       attemptId: reservation.attempt_id,
@@ -147,6 +186,13 @@ Deno.serve(async (request) => {
       }
     } else if (!attemptFinished && accountCreated) {
       console.error('employee_created_but_audit_finalize_failed', { attemptId: reservation.attempt_id })
+    }
+    if (accountCreated) {
+      return json({
+        id: undefined,
+        auditStatus: 'PENDING_RECONCILIATION',
+        message: 'A conta foi criada, mas a confirmação da auditoria está pendente. Não tente criar novamente; a reconciliação automática verificará a conta.',
+      }, headers, 202)
     }
     return json({ error: 'Não foi possível concluir o cadastro com segurança.' }, headers, 500)
   }
