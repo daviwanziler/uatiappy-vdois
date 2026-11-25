@@ -1,8 +1,8 @@
 -- Run with: supabase test db
--- pgTAP plan is 15 assertions. Run only against a disposable local/test Supabase project.
+-- pgTAP plan is 19 assertions. Run only against a disposable local/test Supabase project.
 begin;
 create extension if not exists pgtap with schema extensions;
-select extensions.plan(15);
+select extensions.plan(19);
 
 \set user_a 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
 \set user_b 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
@@ -10,6 +10,15 @@ select extensions.plan(15);
 \set unprovisioned_user 'ffffffff-ffff-4fff-8fff-ffffffffffff'
 \set conversation_a 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'
 \set conversation_b 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee'
+
+select extensions.ok(
+  exists (select 1 from cron.job where jobname = 'uatiappy-cleanup-employee-creation-audit' and schedule = '17 3 * * *'),
+  'daily audit cleanup job is installed in Supabase Cron'
+);
+select extensions.ok(
+  not has_function_privilege('authenticated', 'public.cleanup_employee_creation_audit()', 'EXECUTE'),
+  'authenticated role cannot execute audit cleanup'
+);
 
 -- Only accounts carrying server-managed provisioning metadata become active.
 -- raw_user_meta_data is attacker-controlled and deliberately contains a fake role.
@@ -80,10 +89,19 @@ select set_config('request.jwt.claims', jsonb_build_object(
 )::text, true);
 set local role authenticated;
 select extensions.is((select count(*)::int from public.messages), 2, 'user B sees only messages from conversations they participate in');
+select extensions.ok(
+  not has_table_privilege('authenticated', 'public.employee_profiles', 'UPDATE'),
+  'authenticated role has no SQL UPDATE privilege on employee_profiles'
+);
 select extensions.throws_ok(
-  $$update public.employee_profiles set role = 'ADMINISTRADOR'
-    where user_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'$$,
-  '42501', null, 'employee cannot promote their own role'
+  $update public.employee_profiles set role = 'ADMINISTRADOR'
+    where user_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'$,
+  '42501', null, 'direct API update cannot promote employee to administrator'
+);
+select extensions.is(
+  (select role from public.employee_profiles where user_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'),
+  'FUNCIONARIO',
+  'employee role remains FUNCIONARIO after privilege escalation attempt'
 );
 reset role;
 
