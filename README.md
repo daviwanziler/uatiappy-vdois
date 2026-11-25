@@ -1,14 +1,14 @@
-# UatiAppy 📱
+# UatiAppy 💬
 
 ## Sobre o projeto
 
-O **UatiAppy** é um projeto acadêmico de aplicativo mobile institucional de comunicação e troca de mensagens, inspirado em plataformas como o WhatsApp.
+O **UatiAppy** é um projeto acadêmico de aplicação Web responsiva para comunicação institucional e troca de mensagens, inspirado em plataformas como o WhatsApp.
 
-A proposta é permitir que usuários se comuniquem de maneira simples e intuitiva, com foco inicial em conversas individuais, mensagens de texto e histórico de comunicação.
+A aplicação será acessada por um único link no navegador, tanto em celulares quanto em computadores. A interface deverá adaptar-se aos diferentes tamanhos de tela.
 
 ## 🎯 Objetivo do trabalho
 
-Aplicar, na prática, conhecimentos de engenharia de software, análise de requisitos, modelagem de sistemas, desenvolvimento, testes, controle de versão e trabalho colaborativo.
+Aplicar, na prática, conhecimentos de engenharia de software, análise de requisitos, modelagem de sistemas, desenvolvimento Web, testes, controle de versão e trabalho colaborativo.
 
 ## 📚 Documentação do projeto
 
@@ -17,21 +17,23 @@ Aplicar, na prática, conhecimentos de engenharia de software, análise de requi
 
 Consulte esses documentos antes de implementar funcionalidades ou criar/alterar Issues. Em caso de divergência, registre a dúvida e alinhe com o PO, o TechLead e o orientador; não assuma que uma funcionalidade futura faz parte do MVP.
 
-## 🛠️ Stack tecnológica definida
+## 🛠️ Stack tecnológica e plataforma
 
-| Item | Tecnologia |
+| Item | Tecnologia / definição |
 |---|---|
-| Tipo de aplicação | Mobile |
+| Tipo de aplicação | Web responsiva |
+| Acesso | Um único link pelo navegador em celular ou computador |
 | Linguagem | JavaScript |
-| Framework | React Native |
-| Plataforma de desenvolvimento | Expo |
+| Framework de interface Web | A definir pelo TechLead; React pode ser avaliado, mas ainda não está aprovado |
 | Editor | Visual Studio Code |
 | Backend e banco de dados | Supabase / PostgreSQL |
+| Hospedagem da aplicação Web | Vercel |
 | Versionamento e gestão | GitHub |
 | CI/CD | GitHub Actions |
-| Serviços web complementares, se necessários | Vercel |
 
-O aplicativo será executado em dispositivos móveis. A Vercel não será utilizada para hospedar ou distribuir diretamente o aplicativo mobile nativo; builds e distribuição deverão seguir um fluxo compatível com Expo/React Native.
+O UatiAppy **não será um aplicativo mobile nativo nem uma PWA**. Não exigirá instalação: o usuário abrirá o endereço da aplicação no navegador. A interface será responsiva para celulares e computadores.
+
+O Supabase será consumido pela aplicação por SDK/API, conforme os serviços necessários ao MVP. Credenciais privilegiadas não podem ser incluídas no código executado no navegador; autorização e políticas de acesso devem ser aplicadas no backend/banco de dados.
 
 ## 💡 Funcionalidades previstas para o MVP
 
@@ -50,11 +52,12 @@ Funcionalidades como grupos, anexos, edição/exclusão de mensagens e notifica�
 
 1. **Planejamento e requisitos:** levantamento, priorização e validação do escopo.
 2. **Modelagem:** elaboração dos diagramas UML necessários.
-3. **UX/UI:** desenho dos fluxos e interfaces dos casos de uso prioritários.
-4. **Arquitetura e desenvolvimento:** implementação mobile com React Native e Expo.
+3. **UX/UI:** desenho dos fluxos e interfaces dos casos de uso prioritários, considerando celular e computador.
+4. **Arquitetura e desenvolvimento:** implementação da aplicação Web responsiva em JavaScript, com framework a definir.
 5. **Persistência:** estruturação do armazenamento e integração com Supabase.
-6. **Testes e validação:** verificação dos requisitos funcionais e não funcionais.
-7. **Documentação e entrega:** consolidação dos artefatos e preparação da demonstração acadêmica.
+6. **Hospedagem e automação:** publicação Web na Vercel e verificações de CI/CD pelo GitHub Actions.
+7. **Testes e validação:** verificação dos requisitos funcionais e não funcionais em navegadores e tamanhos de tela acordados.
+8. **Documentação e entrega:** consolidação dos artefatos e preparação da demonstração acadêmica.
 
 ## 👥 Organização da equipe
 
@@ -62,7 +65,7 @@ As atividades são acompanhadas por meio das **GitHub Issues** e pull requests. 
 
 ## 📌 Resultados esperados
 
-Entregar uma aplicação mobile funcional que demonstre a comunicação textual individual entre usuários, além de evidenciar a aplicação prática de engenharia de software, modelagem UML, testes e colaboração em equipe.
+Entregar uma aplicação Web responsiva funcional, acessível por um único link em celulares e computadores, que demonstre a comunicação textual individual entre usuários, além de evidenciar a aplicação prática de engenharia de software, modelagem UML, testes e colaboração em equipe.
 
 ---
 
