@@ -8,13 +8,13 @@ actor "Administrador" as Admin
 actor "Funcionário" as Employee
 
 node "Dispositivo móvel" as Device {
-  artifact "UatiAppy Mobile\nReact Native + Expo\nJavaScript" as App
+  artifact "UatiAppy Mobile\\nReact Native + Expo\\nJavaScript" as App
 }
 
 cloud "Supabase — backend como serviço" as Supabase {
-  component "Serviços/API do Supabase\n(consumidos via SDK/API)" as Api
-  component "Supabase Auth\n(se selecionado e configurado)" as Auth
-  component "Serviço administrativo seguro\n(a definir no servidor)" as AdminService
+  component "Serviços/API do Supabase\\n(consumidos via SDK/API)" as Api
+  component "Supabase Auth\\n(se selecionado e configurado)" as Auth
+  component "Serviço administrativo seguro\\n(a definir no servidor)" as AdminService
   database "PostgreSQL" as DB
   note right of DB
     Políticas de acesso/RLS,
@@ -30,9 +30,8 @@ Api --> DB : operações de dados
 Api --> Auth : autenticação (se adotada)
 Auth --> DB : identidade e sessão
 
-AdminService --> Api : operações administrativas autorizadas
-AdminService --> DB : provisionamento/alterações
-por mecanismo seguro a definir
+AdminService --> Api : operações administrativas privilegiadas\\npor API segura no servidor
+Api --> DB : operações autorizadas e políticas RLS
 
 note right of AdminService
   Operações privilegiadas, como criar
@@ -40,8 +39,8 @@ note right of AdminService
   devem ocorrer somente no servidor.
   Nunca incluir service_role ou
   segredos privilegiados no aplicativo.
-  A implementação específica ainda
-  não foi escolhida.
+  O mecanismo específico ainda
+  não foi escolhido.
 end note
 
 note bottom of App
@@ -54,15 +53,14 @@ note bottom of App
 end note
 
 cloud "GitHub" as GitHub {
-  component "Repositório e gestão\nIssues / Pull Requests" as Repo
-  component "GitHub Actions\n(workflows de CI/CD)" as Actions
+  component "Repositório e gestão\\nIssues / Pull Requests" as Repo
+  component "GitHub Actions\\n(workflows de CI/CD)" as Actions
 }
 Repo --> Actions : eventos do repositório
-Actions ..> App : verificações/builds
-conforme workflows configurados
+Actions ..> App : verificações/builds\\nconforme workflows configurados
 
 cloud "Vercel (opcional)" as Vercel
-Vercel ..> App : eventual entrega web complementar
+Vercel ..> App : eventual serviço web complementar
 note bottom of Vercel
   Não hospeda nem distribui
   o aplicativo mobile nativo.
