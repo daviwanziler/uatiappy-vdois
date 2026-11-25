@@ -1,0 +1,58 @@
+@startuml
+title UatiAppy — Arquitetura lógica do aplicativo mobile
+
+left to right direction
+
+actor "Administrador" as Admin
+actor "Funcionário" as Employee
+
+node "Dispositivo móvel do Administrador" as AdminDevice {
+  artifact "UatiAppy Mobile\nReact Native / JavaScript" as AdminApp
+}
+node "Dispositivo móvel do Funcionário" as EmployeeDevice {
+  artifact "UatiAppy Mobile\nReact Native / JavaScript" as EmployeeApp
+}
+
+cloud "Backend como serviço\nSupabase (proposto)" as Backend {
+  component "Autenticação" as Auth
+  component "Autorização por perfil e status" as Access
+  component "Gerenciamento administrativo de contas" as Accounts
+  component "Conversas e mensagens" as Chat
+  database "PostgreSQL" as DB
+}
+
+Admin --> AdminApp
+Employee --> EmployeeApp
+AdminApp --> Auth : autenticar Administrador
+EmployeeApp --> Auth : login do Funcionário
+AdminApp --> Access : validar perfil
+EmployeeApp --> Access : validar perfil e status
+AdminApp --> Accounts : criar conta / definir senha inicial\nredefinir senha / bloquear / desativar
+EmployeeApp --> Chat : conversas / mensagens
+Auth --> DB : dados de autenticação (conforme configuração)
+Access --> DB : perfil e status da conta
+Accounts --> DB : persistir alterações
+Chat --> DB : persistir e consultar mensagens
+
+note right of Accounts
+  Operações exclusivas do Administrador.
+  A senha inicial e a nova senha são definidas
+  pela administração e entregues ao funcionário
+  por procedimento apropriado e seguro.
+end note
+
+note bottom of Access
+  Funcionário não realiza autocadastro,
+  alteração ou redefinição de senha.
+  Contas bloqueadas ou desativadas não acessam.
+  Regras devem ser validadas no backend.
+end note
+
+note bottom
+  Stack mobile proposta: JavaScript, React Native e Expo.
+  Supabase/PostgreSQL é a base backend proposta, mas os
+  serviços concretos (Auth, RLS, Realtime etc.) devem ser
+  selecionados conforme os requisitos. GitHub Actions
+  atende à automação; Vercel não distribui o app nativo.
+end note
+@enduml

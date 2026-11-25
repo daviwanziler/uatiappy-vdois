@@ -6,7 +6,6 @@ Esta pasta reúne a documentação da arquitetura do UatiAppy, um aplicativo mob
 
 - [Diagrama de Arquitetura UatiAppy (PDF)](./Diagrama%20de%20Arquitetura%20UatiAppy.pdf) — representação visual da arquitetura mobile.
 - [Fonte PlantUML da arquitetura mobile](./diagrama-arquitetura-mobile.puml) — visão lógica editável dos perfis, aplicativo, backend e persistência.
-- [Decisões Tecnológicas](./decisoes-tecnologicas.md) — registro da stack proposta, responsabilidades e decisões pendentes de validação.
 
 ## Plataforma e stack proposta
 
