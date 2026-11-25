@@ -183,7 +183,7 @@ Antes de iniciar uma implementação, a equipe deve conferir se já existe uma I
 - Definir como o usuário localizará o outro participante.
 - Confirmar o significado e as transições dos estados da mensagem.
 - Decidir se a entrega em tempo real é requisito obrigatório e qual mecanismo será adotado.
-- Validar formalmente a stack mobile (JavaScript, React Native e Expo) com a equipe e o orientador.
+- A stack principal (aplicativo mobile, JavaScript, React Native, Expo, VS Code e Supabase/PostgreSQL) já foi confirmada pela equipe. Registrar eventual validação formal do orientador, se exigida pelo processo acadêmico; manter pendentes apenas os detalhes de implementação e configuração.
 - Definir as versões de Android/iOS e os dispositivos móveis suportados.
 - Confirmar a estratégia de builds, testes em dispositivos e distribuição do aplicativo.
 - Confirmar quais serviços Supabase serão utilizados (Auth, PostgreSQL, Realtime, RLS e demais recursos), conforme os requisitos.
@@ -298,7 +298,7 @@ note bottom
   Administrador e Funcionário usam o aplicativo com
   permissões distintas. A autorização deve ser aplicada
   no backend, não apenas na interface.
-  Stack mobile proposta: JavaScript, React Native e Expo.
+  Stack mobile confirmada pela equipe: JavaScript, React Native e Expo.
 end note
 @enduml
 ```
@@ -389,7 +389,7 @@ end note
 
 #### 10.1.5 Diagrama de Implantação
 
-**Objetivo:** representar os nós lógicos do aplicativo mobile, do backend e da persistência. A stack mobile proposta é JavaScript, React Native e Expo; a configuração final dos serviços Supabase e a estratégia de distribuição ainda dependem de validação.
+**Objetivo:** representar os nós lógicos do aplicativo mobile, do backend e da persistência. A stack mobile confirmada pela equipe é JavaScript, React Native e Expo; a configuração final dos serviços Supabase e a estratégia de distribuição ainda dependem de definição.
 
 **Rastreabilidade:** RNF-002, RNF-003, RNF-005, RNF-006 e RNF-010.
 
@@ -636,7 +636,7 @@ ref over Usuario, App : Logout
 - Revisar a divisão lógica de componentes com base na arquitetura que a equipe vier a escolher.
 - Validar a sintaxe e a aplicação do perfil UML, incluindo estereótipos e metaclasses estendidas.
 - Substituir os valores ilustrativos do diagrama de objetos por um cenário acadêmico aprovado, sem usar dados pessoais reais.
-- Atualizar o diagrama de implantação após validar a stack mobile, serviços Supabase, ambientes, builds e distribuição; a visão atual é mobile e conceitual.
+- Atualizar o diagrama de implantação conforme forem definidos os serviços Supabase, ambientes, builds e distribuição; a stack mobile já está confirmada e a visão atual permanece conceitual.
 - Definir os estados oficiais da mensagem, eventos, transições e confirmações.
 - Confirmar se a entrega ao destinatário depende de ele estar online e como essa condição será identificada.
 - Revisar a visão geral de interação e ajustar sua notação ao padrão de modelagem adotado pela equipe.
@@ -644,7 +644,7 @@ ref over Usuario, App : Logout
 
 ## 11. Controle de alterações
 
-Esta versão incorpora as decisões de negócio informadas pelo PO em 25/11/2026: cadastro centralizado pela administração; senha inicial definida pela administração; redefinição de senha feita pela administração; bloqueio/desativação de contas pela administração; perfil Administrador com área exclusiva. A plataforma correta é aplicação mobile. A stack proposta é JavaScript, React Native e Expo, com Supabase/PostgreSQL para backend e dados; GitHub/GitHub Actions para versionamento e automação. Vercel não é mecanismo padrão de distribuição mobile. A validação formal da stack e dos serviços efetivamente necessários ainda está pendente. Alterações de escopo devem ser discutidas com o PO, avaliadas tecnicamente pelo TechLead, comunicadas à equipe e submetidas à validação do orientador quando necessário.
+Esta versão incorpora as decisões de negócio informadas pelo PO em 25/11/2026: cadastro centralizado pela administração; senha inicial definida pela administração; redefinição de senha feita pela administração; bloqueio/desativação de contas pela administração; perfil Administrador com área exclusiva. A plataforma definida é aplicação mobile. A equipe confirmou a stack principal: JavaScript, React Native e Expo, com Supabase/PostgreSQL para backend e dados; GitHub/GitHub Actions para versionamento e automação. Vercel não é mecanismo de distribuição mobile. Permanecem pendentes eventual validação formal do orientador (se exigida) e a definição dos serviços Supabase, ambientes e fluxo de build/distribuição efetivamente necessários. Alterações de escopo devem ser discutidas com o PO, avaliadas tecnicamente pelo TechLead, comunicadas à equipe e submetidas à validação do orientador quando necessário.
 
 ---
 **UatiAppy — documentação de requisitos e escopo do MVP.**
