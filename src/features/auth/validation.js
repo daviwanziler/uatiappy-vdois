@@ -8,7 +8,7 @@ export const PASSWORD_POLICY = Object.freeze({
 })
 
 export function validateEmail(email) {
-  return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(String(email ?? '').trim())
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email ?? '').trim())
 }
 
 export function validatePassword(password) {
