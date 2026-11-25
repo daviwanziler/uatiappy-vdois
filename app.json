@@ -7,11 +7,7 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "br.com.uatiappy.app"
-    },
-    "android": {
-      "package": "br.com.uatiappy.app"
+      "supportsTablet": true
     }
   }
 }
