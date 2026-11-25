@@ -50,11 +50,13 @@ A Vercel não será considerada, por padrão, o mecanismo de distribuição do a
 
 ## 6. Decisões ainda pendentes de validação
 
+**Atualização documental:** a documentação e o PDF de arquitetura foram alinhados à direção mobile na PR #99, já integrada à `main`. Isso não equivale à aprovação formal da stack pelo orientador.
+
 - [ ] Validar formalmente a escolha de JavaScript, React Native e Expo com a equipe e o orientador.
-- [ ] Conferir o PDF do diagrama de arquitetura e ajustar o desenho para refletir a stack aprovada.
+- [x] Substituir o PDF do diagrama de arquitetura por uma versão alinhada à direção mobile. A validação formal da stack permanece pendente.
 - [ ] Confirmar quais recursos do Supabase serão efetivamente utilizados (Auth, Realtime, RLS e demais recursos).
 - [ ] Definir a estratégia de builds, testes em dispositivos e distribuição do aplicativo.
-- [ ] Confirmar se haverá uma aplicação web complementar que justifique o uso da Vercel.
+- [ ] Confirmar se haverá uma aplicação web complementar que justifique o uso da Vercel; a Vercel não faz parte do fluxo de distribuição do aplicativo mobile nativo.
 
 ## 7. Restrições e cuidados
 
