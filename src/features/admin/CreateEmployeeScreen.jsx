@@ -10,7 +10,22 @@ export default function CreateEmployeeScreen() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [feedback, setFeedback] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
+  const [logoutError, setLogoutError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [signingOut, setSigningOut] = useState(false)
+
+  async function handleSignOut() {
+    setLogoutError('')
+    setSigningOut(true)
+    try {
+      const { error } = await signOut()
+      if (error) setLogoutError('Não foi possível encerrar sua sessão. Tente novamente.')
+    } catch {
+      setLogoutError('Não foi possível encerrar sua sessão. Tente novamente.')
+    } finally {
+      setSigningOut(false)
+    }
+  }
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -44,8 +59,11 @@ export default function CreateEmployeeScreen() {
     <main className="dashboard-shell">
       <header className="dashboard-header">
         <div><p className="eyebrow">Área administrativa</p><h1>UatiAppy</h1></div>
-        <button className="secondary-button" onClick={signOut}>Sair</button>
+        <button className="secondary-button" onClick={handleSignOut} disabled={signingOut}>
+          {signingOut ? 'Saindo…' : 'Sair'}
+        </button>
       </header>
+      {logoutError && <p className="message message-error" role="alert">{logoutError}</p>}
       <section className="auth-card admin-card">
         <h2>Cadastrar funcionário</h2>
         <p className="auth-description">Administrador: {user?.email}. Crie a conta e defina a senha inicial do funcionário.</p>
