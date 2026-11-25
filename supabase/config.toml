@@ -1,0 +1,4 @@
+# Supabase local Auth configuration.
+# Employee accounts are provisioned only by the authenticated admin Edge Function.
+[auth]
+enable_signup = false
