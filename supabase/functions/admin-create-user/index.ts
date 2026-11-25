@@ -48,6 +48,7 @@ Deno.serve(async (request) => {
   }
 
   let attemptFinished = false
+  let accountCreated = false
   const finishAttempt = async (outcome: 'UNAUTHORIZED' | 'VALIDATION_FAILURE' | 'FAILURE' | 'SUCCESS', detailCode: string) => {
     if (attemptFinished) return
     const { error } = await adminClient.rpc('finish_employee_creation_attempt', {
@@ -127,6 +128,7 @@ Deno.serve(async (request) => {
       return json({ error: 'Não foi possível criar a conta. Verifique se o e-mail já está em uso.' }, headers, 400)
     }
 
+    accountCreated = true
     await finishAttempt('SUCCESS', 'ACCOUNT_CREATED')
     return json({ id: data.user.id, email: data.user.email }, headers, 201)
   } catch (error) {
@@ -134,7 +136,7 @@ Deno.serve(async (request) => {
       attemptId: reservation.attempt_id,
       message: error instanceof Error ? error.message : 'unknown_error',
     })
-    if (!attemptFinished) {
+    if (!attemptFinished && !accountCreated) {
       try {
         await finishAttempt('FAILURE', 'UNEXPECTED_ERROR')
       } catch (finalizeError) {
@@ -143,6 +145,8 @@ Deno.serve(async (request) => {
           message: finalizeError instanceof Error ? finalizeError.message : 'unknown_finalize_error',
         })
       }
+    } else if (!attemptFinished && accountCreated) {
+      console.error('employee_created_but_audit_finalize_failed', { attemptId: reservation.attempt_id })
     }
     return json({ error: 'Não foi possível concluir o cadastro com segurança.' }, headers, 500)
   }
