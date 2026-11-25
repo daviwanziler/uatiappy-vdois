@@ -54,3 +54,24 @@ begin
   return new;
 end;
 $$;
+
+-- Retention: keep security audit evidence for 90 days. Invoke daily from a
+-- trusted scheduler (Supabase Cron/pg_cron or an external server-side job).
+create or replace function public.cleanup_employee_creation_audit()
+returns integer
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_deleted integer;
+begin
+  delete from public.employee_creation_audit
+  where created_at < now() - interval '90 days';
+  get diagnostics v_deleted = row_count;
+  return v_deleted;
+end;
+$$;
+
+revoke all on function public.cleanup_employee_creation_audit() from public, anon, authenticated;
+grant execute on function public.cleanup_employee_creation_audit() to service_role;
