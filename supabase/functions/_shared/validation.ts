@@ -1,4 +1,4 @@
-const EMAIL_PATTERN = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export function validateEmployeeProvision(email: string, password: string): string | null {
   if (!EMAIL_PATTERN.test(email)) return 'Informe um e-mail válido.'
