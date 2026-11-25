@@ -101,9 +101,9 @@ Deno.serve(async (request) => {
       return json({ error: validationError }, headers, 400)
     }
 
+    const emailHash = await sha256Email(email)
     // Recover an account created by an earlier request whose audit finalization failed.
     // This check runs before createUser, so retrying the same request cannot create a duplicate.
-    const emailHash = await sha256Email(email)
     const { data: recoveredUserId, error: reconcileError } = await adminClient.rpc(
       'reconcile_employee_creation_by_email_hash',
       { p_email_sha256: emailHash },
@@ -117,7 +117,7 @@ Deno.serve(async (request) => {
       return json({ error: 'Não foi possível verificar com segurança se a conta já existe. Não repita a operação; tente novamente mais tarde.' }, headers, 503)
     }
     if (recoveredUserId) {
-      await finishAttempt('SUCCESS', 'EXISTING_ACCOUNT_RECONCILED')
+      attemptFinished = true
       return json({
         id: recoveredUserId,
         email,
