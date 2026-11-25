@@ -161,20 +161,18 @@ $$;
 
 create or replace function public.cleanup_employee_creation_audit()
 returns integer language plpgsql security definer set search_path = ''
-as $
+as $cleanup$
 declare v_deleted integer;
 begin
-  -- A failed network/DB response must not leave a reservation pending forever.
   update public.employee_creation_audit
   set outcome = 'FAILURE', detail_code = 'AUDIT_FINALIZATION_TIMEOUT', finished_at = now()
   where outcome = 'PENDING' and created_at < now() - interval '15 minutes';
-
   delete from public.employee_creation_audit
   where created_at < now() - interval '90 days';
   get diagnostics v_deleted = row_count;
   return v_deleted;
 end;
-$;
+$cleanup$;
 
 alter table public.employee_profiles enable row level security;
 alter table public.conversations enable row level security;
