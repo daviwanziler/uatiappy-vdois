@@ -66,5 +66,31 @@ Não instalar ou introduzir frameworks, banco de dados, provedores de autentica�
 - Abrir Pull Request com resumo, requisitos relacionados, critérios de aceite e evidências de teste.
 - Integrar somente após revisão e validação.
 
+## 8. Atualização após a revisão da arquitetura (25/11/2026)
+
+Esta seção complementa o diagnóstico original; não altera retroativamente as evidências coletadas na data da auditoria.
+
+- A documentação de requisitos e arquitetura foi atualizada e integrada à `main` pela PR #99.
+- O PDF de arquitetura foi substituído por uma versão que representa a direção mobile.
+- A documentação atual registra como proposta: JavaScript, React Native, Expo, Supabase e PostgreSQL; a validação formal pela equipe e pelo orientador permanece pendente.
+- O modelo de acesso documentado contempla os perfis Administrador e Funcionário, com gerenciamento administrativo de contas.
+- A fonte PlantUML da arquitetura mobile foi adicionada à documentação.
+- A auditoria continua sem evidência de código-fonte da aplicação na `main`; a integração documental não significa que o aplicativo já esteja implementado.
+- A antiga pendência de ler o PDF e descobrir a direção mobile foi superada pela revisão documental. Permanecem pendentes a validação formal da stack e a definição dos detalhes de implementação.
+
+## 9. Próxima entrega recomendada — bootstrap mobile
+
+Após a validação da stack e das decisões técnicas ainda pendentes, criar em branch própria um bootstrap mínimo com:
+
+- projeto React Native com Expo e JavaScript;
+- estrutura inicial de diretórios e scripts;
+- instruções para instalação e execução local;
+- configuração de ambiente de exemplo sem credenciais reais;
+- tela inicial mínima para comprovar a execução em dispositivo/emulador;
+- verificações automatizadas iniciais no GitHub Actions, se configuradas.
+
+A integração com Supabase, autenticação e funcionalidades de mensagens deve ocorrer em entregas próprias, orientadas pelas Issues e critérios de aceite correspondentes. Não incluir segredos ou credenciais privilegiadas no aplicativo.
+
 ---
-Documento preparado como registro da auditoria inicial. As conclusões devem ser atualizadas após leitura integral do diagrama de arquitetura e inspeção do primeiro código-fonte.
+
+Documento preparado como registro da auditoria inicial, com atualização posterior claramente separada do diagnóstico original. As conclusões sobre implementação devem ser revistas após o primeiro código-fonte e suas evidências de execução.
