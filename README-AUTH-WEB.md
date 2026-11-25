@@ -14,7 +14,8 @@ Nunca coloque `service_role` em variáveis `VITE_*`, no navegador, no repositór
 ## Políticas aprovadas para esta implementação
 - Senha de funcionário: 12 a 128 caracteres, com pelo menos uma letra maiúscula, uma minúscula, um número e um símbolo.
 - Não há troca obrigatória no primeiro acesso nesta versão. A credencial inicial deve ser entregue por canal seguro e o usuário deve alterá-la em fluxo futuro aprovado.
-- Limite de criação: 5 tentativas por administrador em uma janela móvel de 1 hora.
+- Limite de criação: 5 tentativas por usuário autenticado em uma janela móvel de 1 hora, inclusive chamadas não autorizadas. Após atingir o limite, novas tentativas não geram novas linhas de auditoria.
+- Contas recém-criadas por qualquer fluxo sem metadado server-side `provisioned_by_admin=true` recebem status `DISABLED`; apenas a Edge Function administrativa usa esse marcador. Metadados enviados pelo cliente em `user_metadata` são ignorados.
 - Contas: `ACTIVE`, `BLOCKED` e `DISABLED`. Bloqueio/desativação atualiza o estado no banco e aplica banimento no Supabase Auth; RLS bloqueia imediatamente sessões antigas.
 - Conversas: somente mensagens diretas entre dois funcionários ativos. Participantes só leem mensagens das conversas das quais fazem parte.
 - Papéis confiáveis: `ADMINISTRADOR` e `FUNCIONARIO`, derivados de `auth.users.raw_app_meta_data`; o cliente não pode alterar seu próprio papel.
@@ -34,7 +35,18 @@ supabase link --project-ref SEU_PROJECT_REF
 supabase db push
 ```
 
-A migração sincroniza perfis para usuários existentes. Confirme que a conta administrativa inicial tem `app_metadata.role = ADMINISTRADOR` antes de liberar o uso.
+A migração sincroniza perfis para usuários existentes e desativa contas sem marcador confiável de provisionamento. Antes de liberar o uso, confirme que a conta administrativa inicial foi provisionada por canal administrativo seguro com `app_metadata.role = ADMINISTRADOR` e `app_metadata.provisioned_by_admin = true`. Não configure esses valores via formulário público ou `user_metadata`.
+
+## Supabase Auth — cadastro público desabilitado
+
+A configuração local em `supabase/config.toml` define `[auth].enable_signup = false`. No projeto hospedado, confirme também no Dashboard do Supabase:
+
+1. Abra **Authentication → Settings** (ou **Sign In / Providers**, conforme a versão do Dashboard).
+2. Desative **Allow new users to sign up / Enable signups**.
+3. Salve e teste uma chamada direta a `supabase.auth.signUp()`: ela deve ser recusada.
+4. Mantenha o provisionamento de funcionários exclusivamente na Edge Function `admin-create-user`.
+
+A configuração do repositório não altera sozinha as opções de Auth de um projeto hospedado. Essa etapa precisa ser aplicada no Dashboard do projeto de destino.
 
 ## Edge Functions
 Implantar as funções:
@@ -60,6 +72,9 @@ Em Supabase hospedado, CORS falha fechado quando a allowlist não está configur
 - **#108:** CORS com allowlist explícita, preflight e comportamento fail-closed em produção.
 - **#109:** rate limiting transacional por administrador e trilha de auditoria sem senha/token/e-mail em texto puro.
 - **#110:** RLS para perfis, conversas, participantes e mensagens; testes negativos de isolamento e elevação de privilégio.
+- **#111:** sign-up público desabilitado na configuração local; perfis sem marcador server-side ficam DISABLED; metadados de usuário não concedem papel nem ativação.
+- **#112:** rate limit executado antes de qualquer registro de auditoria para usuários não administradores; somente as cinco primeiras tentativas por hora geram registros, e tentativas bloqueadas não geram novas linhas.
+- **#113:** plano pgTAP atualizado para 13 asserções, com cenários de isolamento, criação de conversa por RPC, cadastro sem provisionamento e rate limit/auditoria.
 
 ## Testes
 ```bash
@@ -69,7 +84,8 @@ deno test --allow-env supabase/functions/tests/security_test.ts
 supabase test db
 ```
 
-Os testes SQL usam pgTAP e devem ser executados em ambiente local/descartável com a migração aplicada. Antes de produção, revisar o esquema final de todas as tabelas públicas, executar os testes integrados e confirmar a configuração de Auth, CORS e segredos no projeto de destino.
+Os testes SQL usam pgTAP e devem ser executados em ambiente local/descartável com a migração aplicada: `supabase start` e `supabase test db`. A suíte declara e executa 13 asserções. Antes de produção, revisar o esquema final de todas as tabelas públicas, executar os testes integrados e confirmar a configuração de Auth, CORS e segredos no projeto de destino.
+A função `public.cleanup_employee_creation_audit()` remove registros com mais de 90 dias. Agende sua execução diária por Supabase Cron/pg_cron ou por um job server-side confiável.
 
 ## Observações operacionais
 - A tela administrativa permite criar, bloquear, desativar e reativar contas de funcionários.
