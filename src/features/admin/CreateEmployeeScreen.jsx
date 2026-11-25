@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
 import { createEmployeeAccount } from '../auth/authService'
+import EmployeeAccountManagement from './EmployeeAccountManagement'
 import { validateAdminProvisionInput } from '../auth/validation'
 
 export default function CreateEmployeeScreen() {
@@ -79,6 +80,7 @@ export default function CreateEmployeeScreen() {
           <button className="primary-button" type="submit" disabled={submitting}>{submitting ? 'Criando…' : 'Criar conta'}</button>
         </form>
       </section>
+      <EmployeeAccountManagement />
     </main>
   )
 }
