@@ -2,7 +2,7 @@
 -- pgTAP plan is 13 assertions. Run only against a disposable local/test Supabase project.
 begin;
 create extension if not exists pgtap with schema extensions;
-select extensions.plan(13);
+select extensions.plan(15);
 
 \set user_a 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
 \set user_b 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
@@ -111,16 +111,21 @@ do $$
 declare
   v_attempt record;
   v_index integer;
+  v_first_attempt uuid;
 begin
   for v_index in 1..5 loop
     select * into v_attempt
     from public.reserve_employee_creation_attempt(
       'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
-      'server-derived-actor-hash',
+      null,
       5
     );
     if not v_attempt.allowed then
       raise exception 'Attempt % should be within the limit', v_index;
+    end if;
+    if v_index = 1 then
+      v_first_attempt := v_attempt.attempt_id;
+      perform public.set_employee_creation_email_hash(v_first_attempt, encode(digest('employee@example.com', 'sha256'), 'hex'));
     end if;
     perform public.finish_employee_creation_attempt(v_attempt.attempt_id, 'UNAUTHORIZED', 'ROLE_REQUIRED');
   end loop;
@@ -133,8 +138,18 @@ select extensions.is(
   'the first five unauthorized attempts are recorded for investigation'
 );
 select extensions.is(
+  (select email_sha256 from public.employee_creation_audit where id = (select id from public.employee_creation_audit where email_sha256 is not null order by created_at desc limit 1)),
+  encode(digest('employee@example.com', 'sha256'), 'hex'),
+  'audit stores SHA-256 of normalized target email'
+);
+select extensions.is(
+  (select actor_id from public.employee_creation_audit where email_sha256 = encode(digest('employee@example.com', 'sha256'), 'hex')),
+  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'::uuid,
+  'actor UUID remains separate from target email hash'
+);
+select extensions.is(
   (select allowed from public.reserve_employee_creation_attempt(
-    'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'server-derived-actor-hash', 5
+    'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', null, 5
   )),
   false,
   'the sixth unauthorized attempt is rate limited'
