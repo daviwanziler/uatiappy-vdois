@@ -34,7 +34,7 @@ begin
     set email = excluded.email,
         role = case
           when new.raw_app_meta_data ->> 'role' = 'ADMINISTRADOR' then 'ADMINISTRADOR'
-          else public.employee_profiles.role
+          else 'FUNCIONARIO'
         end,
         updated_at = now();
   return new;
