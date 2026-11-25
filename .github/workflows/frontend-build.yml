@@ -30,5 +30,19 @@ jobs:
       - name: Test Edge Function security helpers
         run: deno test --allow-env supabase/functions/tests/security_test.ts
 
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start local Supabase
+        run: supabase start
+
+      - name: Apply migrations
+        run: supabase db reset
+
+      - name: Run pgTAP security tests
+        run: supabase test db
+
       - name: Build frontend
         run: npm run build
