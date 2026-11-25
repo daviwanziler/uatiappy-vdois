@@ -32,9 +32,28 @@ Deno.serve(async (request) => {
   if (authError || !caller.user) return json({ error: 'Sessão inválida.' }, headers, 401)
 
   const adminClient = createClient(url, serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } })
+
+  // Reserve a per-user attempt before authorization checks or any audit write.
+  // The actor ID comes only from the verified JWT, never from request payload.
+  const actorHash = await sha256(`uatiappy-admin-create:${caller.user.id}`)
+  const { data: reservation, error: rateError } = await adminClient.rpc('reserve_employee_creation_attempt', {
+    p_actor_id: caller.user.id,
+    p_email_sha256: actorHash,
+    p_max_attempts: 5,
+  }).single()
+
+  if (rateError || !reservation) return json({ error: 'Não foi possível validar o limite de tentativas.' }, headers, 503)
+  if (!reservation.allowed) {
+    return json({ error: 'Limite de 5 tentativas por hora atingido. Tente novamente mais tarde.' }, {
+      ...headers, 'Retry-After': String(reservation.retry_after_seconds),
+    }, 429)
+  }
+
   if (caller.user.app_metadata?.role !== 'ADMINISTRADOR') {
-    await adminClient.from('employee_creation_audit').insert({
-      actor_id: caller.user.id, outcome: 'UNAUTHORIZED', detail_code: 'ROLE_REQUIRED',
+    await adminClient.rpc('finish_employee_creation_attempt', {
+      p_attempt_id: reservation.attempt_id,
+      p_outcome: 'UNAUTHORIZED',
+      p_detail_code: 'ROLE_REQUIRED',
     })
     return json({ error: 'Somente Administradores podem cadastrar funcionários.' }, headers, 403)
   }
@@ -45,6 +64,11 @@ Deno.serve(async (request) => {
     .eq('user_id', caller.user.id)
     .maybeSingle()
   if (profileError || adminProfile?.role !== 'ADMINISTRADOR' || adminProfile.account_status !== 'ACTIVE') {
+    await adminClient.rpc('finish_employee_creation_attempt', {
+      p_attempt_id: reservation.attempt_id,
+      p_outcome: 'UNAUTHORIZED',
+      p_detail_code: 'ADMIN_PROFILE_INACTIVE',
+    })
     return json({ error: 'Conta administrativa inativa ou não provisionada.' }, headers, 403)
   }
 
@@ -60,25 +84,11 @@ Deno.serve(async (request) => {
   const validationError = validateEmployeeProvision(email, password)
   if (validationError) return json({ error: validationError }, headers, 400)
 
-  const emailHash = await sha256(email)
-  const { data: reservation, error: rateError } = await adminClient.rpc('reserve_employee_creation_attempt', {
-    p_actor_id: caller.user.id,
-    p_email_sha256: emailHash,
-    p_max_attempts: 5,
-  }).single()
-
-  if (rateError || !reservation) return json({ error: 'Não foi possível validar o limite de criação.' }, headers, 503)
-  if (!reservation.allowed) {
-    return json({ error: 'Limite de 5 tentativas de criação por hora atingido. Tente novamente mais tarde.' }, {
-      ...headers, 'Retry-After': String(reservation.retry_after_seconds),
-    }, 429)
-  }
-
   const { data, error } = await adminClient.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
-    app_metadata: { role: 'FUNCIONARIO' },
+    app_metadata: { role: 'FUNCIONARIO', provisioned_by_admin: true },
   })
 
   await adminClient.rpc('finish_employee_creation_attempt', {
