@@ -168,7 +168,7 @@ Sugestão de rastreabilidade inicial:
 | Conversas individuais e autorização | RF-004, RNF-004, RN-003, RN-005 |
 | Envio e recebimento de mensagens | RF-005, RF-006, RF-011, RNF-002, RNF-009, RN-004, RN-007 |
 | Persistência e histórico | RF-007, RF-008, RF-009, RNF-005, RNF-007, RN-006 |
-| Testes e validação | Todos os requisitos aplicáveis, especialmente RNF-001 a RNF-010 |
+| Testes e validação | Todos os requisitos aplicáveis, especialmente RNF-001 a RNF-012 |
 
 Antes de iniciar uma implementação, a equipe deve conferir se já existe uma Issue equivalente. Itens fora do MVP devem permanecer identificados como futuros ou ser encerrados como não planejados para esta entrega, sem apagar o histórico.
 
@@ -623,11 +623,11 @@ ref over Usuario, App : Logout
 | Perfis | RF-003 a RF-009; RN-001, RN-003 e RN-004 |
 | Objetos | RF-004 a RF-009; RN-003, RN-004 e RN-006 |
 | Implantação | RNF-002, RNF-003, RNF-005, RNF-006, RNF-010, RNF-011 e RNF-012; RN-008 a RN-014 |
-| Casos de Uso | RF-001 a RF-012; RN-001 a RN-005 |
+| Casos de Uso | RF-001 a RF-015; RN-001 a RN-014; RNF-011 e RNF-012 |
 | Máquina de Estados | RF-005 a RF-007, RF-010 e RF-011; RN-004 e RN-007; RNF-009 |
 | Comunicação | RF-005 a RF-007, RF-010 e RF-011; RN-002, RN-004, RN-005 e RN-007 |
 | Atividades | RF-002, RF-004, RF-005, RF-007, RF-010 e RF-011; RN-002, RN-004 e RN-007 |
-| Visão Geral de Interação | RF-001 a RF-012; RN-001 a RN-007 |
+| Visão Geral de Interação | RF-002, RF-004 a RF-012; RN-002 a RN-007 |
 
 ### 10.4 Pendências específicas dos diagramas
 
