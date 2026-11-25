@@ -65,6 +65,9 @@ $cleanup$;
 revoke all on function public.cleanup_employee_creation_audit() from public, anon, authenticated;
 grant execute on function public.cleanup_employee_creation_audit() to service_role, postgres;
 
+-- Employees must not update their own role (or any profile column) through the client API.
+revoke update on table public.employee_profiles from public, anon, authenticated;
+
 -- Replace the named job idempotently. 03:17 UTC daily.
 do $schedule$
 declare
