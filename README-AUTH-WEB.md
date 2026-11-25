@@ -21,7 +21,7 @@ Nunca coloque `service_role` em variáveis `VITE_*`, no navegador, no repositór
 - Papéis confiáveis: `ADMINISTRADOR` e `FUNCIONARIO`, derivados de `auth.users.raw_app_meta_data`; o cliente não pode alterar seu próprio papel.
 
 ## Migrações do banco
-As migrações `supabase/migrations/20261125000100_security_baseline.sql` e `supabase/migrations/20261125000200_security_hardening.sql` criam e endurecem:
+As migrações `supabase/migrations/20261125000100_security_baseline.sql`, `supabase/migrations/20261125000200_security_hardening.sql` e `supabase/migrations/20261125000300_conversations_and_audit_schema.sql` criam e endurecem:
 - `employee_profiles` com papel e estado da conta; novos usuários sem marcador confiável permanecem `DISABLED`;
 - `conversations`, `conversation_participants` e `messages`;
 - políticas RLS e funções auxiliares para verificar conta ativa e participação;
@@ -74,7 +74,10 @@ Em Supabase hospedado, CORS falha fechado quando a allowlist não está configur
 - **#110:** RLS para perfis, conversas, participantes e mensagens; testes negativos de isolamento e elevação de privilégio.
 - **#111:** sign-up público desabilitado na configuração local; perfis sem marcador server-side ficam DISABLED; metadados de usuário não concedem papel nem ativação.
 - **#112:** rate limit executado antes de qualquer registro de auditoria para usuários não administradores; somente as cinco primeiras tentativas por hora geram registros, e tentativas bloqueadas não geram novas linhas.
-- **#113:** plano pgTAP atualizado para 13 asserções, com cenários de isolamento, criação de conversa por RPC, cadastro sem provisionamento e rate limit/auditoria.
+- **#113:** plano pgTAP atualizado para 15 asserções, incluindo hash de e-mail normalizado e separação do ID do ator.
+- **#114:** `email_sha256` recebe SHA-256 de `trim().toLowerCase()` do e-mail alvo; `actor_id` continua sendo o UUID do administrador.
+- **#115:** todos os caminhos após reserva finalizam a tentativa; JSON/dados inválidos usam `VALIDATION_FAILURE`; exceções geram `FAILURE`, logs estruturados e timeout de pendências após 15 minutos pela rotina de manutenção.
+- **#116:** migration cria conversas, participantes, mensagens, índices, constraints, RLS e RPC `create_direct_conversation`, com bloqueio de criação direta e prevenção de duplicidade.
 
 ## Testes
 ```bash
@@ -85,7 +88,7 @@ supabase test db
 ```
 
 Os testes SQL usam pgTAP e devem ser executados em ambiente local/descartável com a migração aplicada: `supabase start` e `supabase test db`. A suíte declara e executa 13 asserções. Antes de produção, revisar o esquema final de todas as tabelas públicas, executar os testes integrados e confirmar a configuração de Auth, CORS e segredos no projeto de destino.
-A função `public.cleanup_employee_creation_audit()` remove registros com mais de 90 dias. Agende sua execução diária por Supabase Cron/pg_cron ou por um job server-side confiável.
+A função `public.cleanup_employee_creation_audit()` finaliza reservas `PENDING` com mais de 15 minutos como falha monitorável e remove registros com mais de 90 dias. Agende sua execução diária por Supabase Cron/pg_cron ou por um job server-side confiável. Agende sua execução diária por Supabase Cron/pg_cron ou por um job server-side confiável.
 
 ## Observações operacionais
 - A tela administrativa permite criar, bloquear, desativar e reativar contas de funcionários.
