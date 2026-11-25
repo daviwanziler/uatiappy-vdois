@@ -102,6 +102,19 @@ Deno.serve(async (request) => {
     }
 
     const emailHash = await sha256Email(email)
+    const { error: hashError } = await adminClient.rpc('set_employee_creation_email_hash', {
+      p_attempt_id: reservation.attempt_id,
+      p_email_sha256: emailHash,
+    })
+    if (hashError) {
+      console.error('employee_creation_email_hash_update_failed', {
+        attemptId: reservation.attempt_id,
+        code: hashError.code,
+      })
+      await finishAttempt('FAILURE', 'AUDIT_HASH_UPDATE_FAILED')
+      return json({ error: 'Não foi possível registrar a auditoria da operação.' }, headers, 500)
+    }
+
     // Recover an account created by an earlier request whose audit finalization failed.
     // This check runs before createUser, so retrying the same request cannot create a duplicate.
     const { data: recoveredUserId, error: reconcileError } = await adminClient.rpc(
@@ -125,18 +138,7 @@ Deno.serve(async (request) => {
         message: 'A conta já existia e a auditoria foi reconciliada. Nenhuma conta duplicada foi criada.',
       }, headers, 200)
     }
-    const { error: hashError } = await adminClient.rpc('set_employee_creation_email_hash', {
-      p_attempt_id: reservation.attempt_id,
-      p_email_sha256: emailHash,
-    })
-    if (hashError) {
-      console.error('employee_creation_email_hash_update_failed', {
-        attemptId: reservation.attempt_id,
-        code: hashError.code,
-      })
-      await finishAttempt('FAILURE', 'AUDIT_HASH_UPDATE_FAILED')
-      return json({ error: 'Não foi possível registrar a auditoria da operação.' }, headers, 500)
-    }
+
 
     const { data, error } = await adminClient.auth.admin.createUser({
       email,
