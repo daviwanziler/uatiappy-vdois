@@ -12,7 +12,7 @@ React + JavaScript + Vite + Supabase Auth.
 Nunca coloque a chave `service_role` em variáveis `VITE_*`, no navegador ou no repositório.
 
 ## Issue #90 — provisionamento administrativo
-Não existe autocadastro público. Um Administrador autenticado cria contas de funcionários pela tela administrativa. A criação ocorre pela Edge Function `admin-create-user`, que valida o JWT e o papel `ADMINISTRADOR) no servidor antes de usar a chave service role.
+Não existe autocadastro público. Um Administrador autenticado cria contas de funcionários pela tela administrativa. A criação ocorre pela Edge Function `admin-create-user`, que valida o JWT e o papel `ADMINISTRADOR` no servidor antes de usar a chave service role.
 
 Para implantar a função, configure os segredos do projeto Supabase (`SUPABASE_URL`, `SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY`) no ambiente de Functions e execute:
 
