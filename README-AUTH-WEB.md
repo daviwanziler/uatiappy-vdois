@@ -1,40 +1,77 @@
-# UatiAppy — autenticação web (Issues #90 e #91)
+# UatiAppy — autenticação e segurança web
 
 ## Stack
-React + JavaScript + Vite + Supabase Auth.
+React + JavaScript + Vite + Supabase Auth/PostgreSQL/Edge Functions.
 
 ## Configuração local
 1. Execute `npm install`.
 2. Copie `.env.example` para `.env`.
-3. Preencha `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` com os valores públicos do projeto Supabase.
+3. Preencha `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` com os valores públicos do projeto.
 4. Execute `npm run dev`.
 
-Nunca coloque a chave `service_role` em variáveis `VITE_*`, no navegador ou no repositório.
+Nunca coloque `service_role` em variáveis `VITE_*`, no navegador, no repositório ou em logs.
 
-## Issue #90 — provisionamento administrativo
-Não existe autocadastro público. Um Administrador autenticado cria contas de funcionários pela tela administrativa. A criação ocorre pela Edge Function `admin-create-user`, que valida o JWT e o papel `ADMINISTRADOR` no servidor antes de usar a chave service role.
+## Políticas aprovadas para esta implementação
+- Senha de funcionário: 12 a 128 caracteres, com pelo menos uma letra maiúscula, uma minúscula, um número e um símbolo.
+- Não há troca obrigatória no primeiro acesso nesta versão. A credencial inicial deve ser entregue por canal seguro e o usuário deve alterá-la em fluxo futuro aprovado.
+- Limite de criação: 5 tentativas por administrador em uma janela móvel de 1 hora.
+- Contas: `ACTIVE`, `BLOCKED` e `DISABLED`. Bloqueio/desativação atualiza o estado no banco e aplica banimento no Supabase Auth; RLS bloqueia imediatamente sessões antigas.
+- Conversas: somente mensagens diretas entre dois funcionários ativos. Participantes só leem mensagens das conversas das quais fazem parte.
+- Papéis confiáveis: `ADMINISTRADOR` e `FUNCIONARIO`, derivados de `auth.users.raw_app_meta_data`; o cliente não pode alterar seu próprio papel.
 
-Para implantar a função, configure os segredos do projeto Supabase (`SUPABASE_URL`, `SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY`) no ambiente de Functions e execute:
+## Migrações do banco
+A migração `supabase/migrations/20261125000100_security_baseline.sql` cria:
+- `employee_profiles` com papel e estado da conta;
+- `conversations`, `conversation_participants` e `messages`;
+- políticas RLS e funções auxiliares para verificar conta ativa e participação;
+- RPC `create_direct_conversation`;
+- trilha `employee_creation_audit` e reserva atômica de tentativas.
+
+Aplicar somente no projeto Supabase correto, após revisar o ambiente:
+
+```bash
+supabase link --project-ref SEU_PROJECT_REF
+supabase db push
+```
+
+A migração sincroniza perfis para usuários existentes. Confirme que a conta administrativa inicial tem `app_metadata.role = ADMINISTRADOR` antes de liberar o uso.
+
+## Edge Functions
+Implantar as funções:
 
 ```bash
 supabase functions deploy admin-create-user
+supabase functions deploy admin-set-account-status
 ```
 
-A primeira conta Administrador precisa ser provisionada de forma segura fora da aplicação, com `app_metadata.role = ADMINISTRADOR`.\n\nA Edge Function restringe CORS às origens configuradas em `ALLOWED_ORIGINS`, separadas por vírgula. Em desenvolvimento, na ausência dessa variável, somente `http://localhost:5173` e `http://127.0.0.1:5173` são aceitas. Em produção, configure explicitamente os domínios HTTPS autorizados no ambiente da Edge Function; não mantenha o fallback de desenvolvimento.
+Configure `ALLOWED_ORIGINS` como lista separada por vírgula, sem barra final, por exemplo:
 
-## Issue #91 — login, logout e sessão
-O Supabase Auth autentica e mantém a sessão no navegador. O AppGate separa a tela de login, a área administrativa e a área do funcionário com base no papel gravado em `app_metadata`.
+```bash
+supabase secrets set ALLOWED_ORIGINS="https://app.seudominio.com,https://admin.seudominio.com"
+```
 
-## Premissas e pendências
-- O PO ainda precisa aprovar os campos obrigatórios e o identificador único. O e-mail está sendo usado provisoriamente como identificador por ser o identificador nativo do fluxo email/senha do Supabase Auth.
-- Política de senha inicial, troca obrigatória no primeiro acesso e canal de entrega das credenciais precisam de validação do PO/administrador.
-- O papel deve ser gravado apenas por operação confiável no backend; não aceitar papel enviado pelo cliente.
-- A Issue #106 exige decisão do PO sobre tamanho mínimo/máximo, complexidade e troca obrigatória no primeiro acesso. A validação atual de 8 caracteres continua provisória e não deve ser tratada como política aprovada.\n- As Issues #107 e #110 dependem de definição do modelo de dados de funcionários/contas, estado de bloqueio, tabelas acessíveis ao cliente e matriz de permissões. Não foram criadas policies RLS genéricas sem esse contrato.\n- A Issue #109 depende de decidir o mecanismo persistente de rate limiting e auditoria (por exemplo, tabela/funcão RPC transacional ou serviço externo). Limites em memória da Edge Function não seriam confiáveis entre instâncias.
-- A proteção visual do AppGate não substitui políticas RLS e autorização no backend para os dados do sistema.
-- Testes automatizados atuais cobrem validações puras; testes integrados exigem projeto Supabase configurado.
+Em Supabase hospedado, CORS falha fechado quando a allowlist não está configurada. Em desenvolvimento local, as origens localhost são aceitas automaticamente somente quando a própria `SUPABASE_URL` aponta para localhost. Ambas as funções verificam o JWT, o papel e o estado ativo do administrador no servidor. A chave `SUPABASE_SERVICE_ROLE_KEY` permanece exclusivamente no ambiente server-side da Edge Function.
+
+## Issues SQA cobertas
+- **#104:** tela de acesso não autorizado oferece logout e retorna ao login quando a sessão é encerrada.
+- **#105:** logout trata erros e mantém a interface consistente com a sessão real.
+- **#106:** política de senha definida e aplicada no frontend e na Edge Function, com testes de limites e complexidade.
+- **#107:** gestão administrativa de estado de conta; banimento no Auth e bloqueio por RLS para tokens antigos.
+- **#108:** CORS com allowlist explícita, preflight e comportamento fail-closed em produção.
+- **#109:** rate limiting transacional por administrador e trilha de auditoria sem senha/token/e-mail em texto puro.
+- **#110:** RLS para perfis, conversas, participantes e mensagens; testes negativos de isolamento e elevação de privilégio.
 
 ## Testes
 ```bash
 npm test
 npm run build
+deno test --allow-env supabase/functions/tests/security_test.ts
+supabase test db
 ```
+
+Os testes SQL usam pgTAP e devem ser executados em ambiente local/descartável com a migração aplicada. Antes de produção, revisar o esquema final de todas as tabelas públicas, executar os testes integrados e confirmar a configuração de Auth, CORS e segredos no projeto de destino.
+
+## Observações operacionais
+- A tela administrativa permite criar, bloquear, desativar e reativar contas de funcionários.
+- Administradores não podem bloquear a própria conta nem alterar outra conta administrativa por esta função; essa operação exige procedimento de recuperação separado.
+- O MVP não inclui redefinição de senha nem fluxo de troca obrigatória no primeiro acesso.
