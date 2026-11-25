@@ -71,7 +71,7 @@ export default function CreateEmployeeScreen() {
           <label htmlFor="employee-email">E-mail de acesso</label>
           <input id="employee-email" type="email" autoComplete="off" value={email} onChange={e => setEmail(e.target.value)} required />
           <label htmlFor="initial-password">Senha inicial</label>
-          <input id="initial-password" type="password" autoComplete="new-password" minLength={8} value={password} onChange={e => setPassword(e.target.value)} required />
+          <input id="initial-password" type="password" autoComplete="new-password" minLength={12} value={password} onChange={e => setPassword(e.target.value)} required />
           <label htmlFor="confirm-password">Confirmar senha</label>
           <input id="confirm-password" type="password" autoComplete="new-password" minLength={8} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required />
           {errorMessage && <p className="message message-error" role="alert">{errorMessage}</p>}
