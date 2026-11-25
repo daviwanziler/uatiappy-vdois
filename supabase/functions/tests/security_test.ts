@@ -1,5 +1,6 @@
 import { corsHeadersFor } from '../_shared/cors.ts'
 import { validateEmployeeProvision } from '../_shared/validation.ts'
+import { normalizeAuditEmail, sha256Email } from '../_shared/audit.ts'
 
 Deno.test('CORS allows only explicitly configured production origins', () => {
   Deno.env.set('SUPABASE_URL', 'https://project.supabase.co')
@@ -57,4 +58,13 @@ Deno.test('server-side employee provisioning enforces the same password policy',
   if (!validateEmployeeProvision('employee@example.com', 'uatiappy#2026')) {
     throw new Error('A password without uppercase must be rejected.')
   }
+})
+
+Deno.test('audit email hash normalizes trim and lowercase before SHA-256', async () => {
+  const normalized = normalizeAuditEmail('  Employee@Example.COM  ')
+  if (normalized !== 'employee@example.com') throw new Error('Email normalization is incorrect.')
+  const hashWithWhitespace = await sha256Email('  Employee@Example.COM  ')
+  const hashNormalized = await sha256Email('employee@example.com')
+  if (hashWithWhitespace !== hashNormalized) throw new Error('Equivalent normalized emails must have the same hash.')
+  if (!/^[0-9a-f]{64}$/.test(hashWithWhitespace)) throw new Error('Audit hash must be a SHA-256 hex digest.')
 })
