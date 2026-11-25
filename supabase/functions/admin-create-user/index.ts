@@ -1,17 +1,13 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeadersFor } from '../_shared/cors.ts'
 import { validateEmployeeProvision } from '../_shared/validation.ts'
+import { sha256Email } from '../_shared/audit.ts'
 
 const json = (body: Record<string, unknown>, headers: Record<string, string>, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
     headers: { ...headers, 'Content-Type': 'application/json' },
   })
-
-async function sha256(value: string) {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))
-  return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, '0')).join('')
-}
 
 Deno.serve(async (request) => {
   const { headers, allowed } = corsHeadersFor(request)
@@ -105,7 +101,7 @@ Deno.serve(async (request) => {
     }
 
     // Hash the normalized target email; never persist the raw email in the audit table.
-    const emailHash = await sha256(email)
+    const emailHash = await sha256Email(email)
     const { error: hashError } = await adminClient.rpc('set_employee_creation_email_hash', {
       p_attempt_id: reservation.attempt_id,
       p_email_sha256: emailHash,
