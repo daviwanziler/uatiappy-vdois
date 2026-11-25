@@ -33,70 +33,121 @@ Deno.serve(async (request) => {
 
   const adminClient = createClient(url, serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } })
 
-  // Reserve a per-user attempt before authorization checks or any audit write.
-  // The actor ID comes only from the verified JWT, never from request payload.
-  const actorHash = await sha256(`uatiappy-admin-create:${caller.user.id}`)
+  // The reservation is made before role checks so unauthorized attempts are rate-limited.
+  // The email hash is filled after parsing; the actor identity remains in actor_id.
   const { data: reservation, error: rateError } = await adminClient.rpc('reserve_employee_creation_attempt', {
     p_actor_id: caller.user.id,
-    p_email_sha256: actorHash,
+    p_email_sha256: null,
     p_max_attempts: 5,
   }).single()
 
-  if (rateError || !reservation) return json({ error: 'Não foi possível validar o limite de tentativas.' }, headers, 503)
+  if (rateError || !reservation) {
+    console.error('employee_creation_rate_limit_reservation_failed', { actorId: caller.user.id, code: rateError?.code })
+    return json({ error: 'Não foi possível validar o limite de tentativas.' }, headers, 503)
+  }
   if (!reservation.allowed) {
     return json({ error: 'Limite de 5 tentativas por hora atingido. Tente novamente mais tarde.' }, {
       ...headers, 'Retry-After': String(reservation.retry_after_seconds),
     }, 429)
   }
 
-  if (caller.user.app_metadata?.role !== 'ADMINISTRADOR') {
-    await adminClient.rpc('finish_employee_creation_attempt', {
+  let attemptFinished = false
+  const finishAttempt = async (outcome: 'UNAUTHORIZED' | 'VALIDATION_FAILURE' | 'FAILURE' | 'SUCCESS', detailCode: string) => {
+    if (attemptFinished) return
+    const { error } = await adminClient.rpc('finish_employee_creation_attempt', {
       p_attempt_id: reservation.attempt_id,
-      p_outcome: 'UNAUTHORIZED',
-      p_detail_code: 'ROLE_REQUIRED',
+      p_outcome: outcome,
+      p_detail_code: detailCode,
     })
-    return json({ error: 'Somente Administradores podem cadastrar funcionários.' }, headers, 403)
+    if (error) {
+      console.error('employee_creation_attempt_finalize_failed', {
+        attemptId: reservation.attempt_id,
+        outcome,
+        code: error.code,
+      })
+      throw new Error('Não foi possível finalizar o registro de auditoria.')
+    }
+    attemptFinished = true
   }
 
-  const { data: adminProfile, error: profileError } = await adminClient
-    .from('employee_profiles')
-    .select('role, account_status')
-    .eq('user_id', caller.user.id)
-    .maybeSingle()
-  if (profileError || adminProfile?.role !== 'ADMINISTRADOR' || adminProfile.account_status !== 'ACTIVE') {
-    await adminClient.rpc('finish_employee_creation_attempt', {
-      p_attempt_id: reservation.attempt_id,
-      p_outcome: 'UNAUTHORIZED',
-      p_detail_code: 'ADMIN_PROFILE_INACTIVE',
-    })
-    return json({ error: 'Conta administrativa inativa ou não provisionada.' }, headers, 403)
-  }
-
-  let payload: { email?: string; password?: string }
   try {
-    payload = await request.json()
-  } catch {
-    return json({ error: 'Requisição inválida.' }, headers, 400)
+    if (caller.user.app_metadata?.role !== 'ADMINISTRADOR') {
+      await finishAttempt('UNAUTHORIZED', 'ROLE_REQUIRED')
+      return json({ error: 'Somente Administradores podem cadastrar funcionários.' }, headers, 403)
+    }
+
+    const { data: adminProfile, error: profileError } = await adminClient
+      .from('employee_profiles')
+      .select('role, account_status')
+      .eq('user_id', caller.user.id)
+      .maybeSingle()
+    if (profileError || adminProfile?.role !== 'ADMINISTRADOR' || adminProfile.account_status !== 'ACTIVE') {
+      await finishAttempt('UNAUTHORIZED', 'ADMIN_PROFILE_INACTIVE')
+      return json({ error: 'Conta administrativa inativa ou não provisionada.' }, headers, 403)
+    }
+
+    let payload: { email?: string; password?: string }
+    try {
+      const parsed: unknown = await request.json()
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('invalid_json_shape')
+      payload = parsed as { email?: string; password?: string }
+    } catch {
+      await finishAttempt('VALIDATION_FAILURE', 'INVALID_JSON')
+      return json({ error: 'Requisição inválida.' }, headers, 400)
+    }
+
+    const email = String(payload.email ?? '').trim().toLowerCase()
+    const password = String(payload.password ?? '')
+    const validationError = validateEmployeeProvision(email, password)
+    if (validationError) {
+      await finishAttempt('VALIDATION_FAILURE', 'INVALID_EMPLOYEE_DATA')
+      return json({ error: validationError }, headers, 400)
+    }
+
+    // Hash the normalized target email; never persist the raw email in the audit table.
+    const emailHash = await sha256(email)
+    const { error: hashError } = await adminClient.rpc('set_employee_creation_email_hash', {
+      p_attempt_id: reservation.attempt_id,
+      p_email_sha256: emailHash,
+    })
+    if (hashError) {
+      console.error('employee_creation_email_hash_update_failed', {
+        attemptId: reservation.attempt_id,
+        code: hashError.code,
+      })
+      await finishAttempt('FAILURE', 'AUDIT_HASH_UPDATE_FAILED')
+      return json({ error: 'Não foi possível registrar a auditoria da operação.' }, headers, 500)
+    }
+
+    const { data, error } = await adminClient.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      app_metadata: { role: 'FUNCIONARIO', provisioned_by_admin: true },
+    })
+
+    if (error) {
+      await finishAttempt('FAILURE', 'AUTH_CREATE_FAILED')
+      return json({ error: 'Não foi possível criar a conta. Verifique se o e-mail já está em uso.' }, headers, 400)
+    }
+
+    await finishAttempt('SUCCESS', 'ACCOUNT_CREATED')
+    return json({ id: data.user.id, email: data.user.email }, headers, 201)
+  } catch (error) {
+    console.error('employee_creation_unexpected_failure', {
+      attemptId: reservation.attempt_id,
+      message: error instanceof Error ? error.message : 'unknown_error',
+    })
+    if (!attemptFinished) {
+      try {
+        await finishAttempt('FAILURE', 'UNEXPECTED_ERROR')
+      } catch (finalizeError) {
+        console.error('employee_creation_pending_attempt_requires_alert', {
+          attemptId: reservation.attempt_id,
+          message: finalizeError instanceof Error ? finalizeError.message : 'unknown_finalize_error',
+        })
+      }
+    }
+    return json({ error: 'Não foi possível concluir o cadastro com segurança.' }, headers, 500)
   }
-
-  const email = String(payload.email ?? '').trim().toLowerCase()
-  const password = String(payload.password ?? '')
-  const validationError = validateEmployeeProvision(email, password)
-  if (validationError) return json({ error: validationError }, headers, 400)
-
-  const { data, error } = await adminClient.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-    app_metadata: { role: 'FUNCIONARIO', provisioned_by_admin: true },
-  })
-
-  await adminClient.rpc('finish_employee_creation_attempt', {
-    p_attempt_id: reservation.attempt_id,
-    p_outcome: error ? 'FAILURE' : 'SUCCESS',
-    p_detail_code: error ? 'AUTH_CREATE_FAILED' : 'ACCOUNT_CREATED',
-  })
-
-  if (error) return json({ error: 'Não foi possível criar a conta. Verifique se o e-mail já está em uso.' }, headers, 400)
-  return json({ id: data.user.id, email: data.user.email }, headers, 201)
 })
