@@ -2,7 +2,7 @@
 -- This integration test creates disposable auth users and rolls everything back.
 begin;
 create extension if not exists pgtap with schema extensions;
-select extensions.plan(6);
+select extensions.plan(8);
 
 \set user_a 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
 \set user_b 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
