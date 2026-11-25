@@ -74,10 +74,13 @@ Em Supabase hospedado, CORS falha fechado quando a allowlist não está configur
 - **#110:** RLS para perfis, conversas, participantes e mensagens; testes negativos de isolamento e elevação de privilégio.
 - **#111:** sign-up público desabilitado na configuração local; perfis sem marcador server-side ficam DISABLED; metadados de usuário não concedem papel nem ativação.
 - **#112:** rate limit executado antes de qualquer registro de auditoria para usuários não administradores; somente as cinco primeiras tentativas por hora geram registros, e tentativas bloqueadas não geram novas linhas.
-- **#113:** plano pgTAP atualizado para 15 asserções, incluindo hash de e-mail normalizado e separação do ID do ator.
+- **#113:** plano pgTAP atualizado para 19 asserções; a contagem foi conferida no arquivo SQL e deve ser confirmada pela execução de `supabase test db`.
 - **#114:** `email_sha256` recebe SHA-256 de `trim().toLowerCase()` do e-mail alvo; `actor_id` continua sendo o UUID do administrador.
 - **#115:** todos os caminhos após reserva finalizam a tentativa; JSON/dados inválidos usam `VALIDATION_FAILURE`; exceções geram `FAILURE`, logs estruturados e timeout de pendências após 15 minutos pela rotina de manutenção.
 - **#116:** migration cria conversas, participantes, mensagens, índices, constraints, RLS e RPC `create_direct_conversation`, com bloqueio de criação direta e prevenção de duplicidade.
+- **#117:** teste de autoelevação verifica ausência do privilégio SQL `UPDATE`, rejeição de atualização direta e persistência do papel `FUNCIONARIO`.
+- **#118:** migration `20261125000400_audit_cleanup_schedule.sql` instala job diário no Supabase Cron às 03:17 UTC, registra sucesso/falha e restringe execução da rotina a identidades confiáveis.
+- **#119:** contagem documentada sincronizada com `extensions.plan(19)` e com as 19 chamadas de asserção; instruções operacionais e limitações do ambiente hospedado foram separadas.
 
 ## Testes
 ```bash
@@ -87,8 +90,37 @@ deno test --allow-env supabase/functions/tests/security_test.ts
 supabase test db
 ```
 
-Os testes SQL usam pgTAP e devem ser executados em ambiente local/descartável com a migração aplicada: `supabase start` e `supabase test db`. A suíte declara e executa 13 asserções. Antes de produção, revisar o esquema final de todas as tabelas públicas, executar os testes integrados e confirmar a configuração de Auth, CORS e segredos no projeto de destino.
-A função `public.cleanup_employee_creation_audit()` finaliza reservas `PENDING` com mais de 15 minutos como falha monitorável e remove registros com mais de 90 dias. Agende sua execução diária por Supabase Cron/pg_cron ou por um job server-side confiável. Agende sua execução diária por Supabase Cron/pg_cron ou por um job server-side confiável.
+Os testes SQL usam pgTAP e devem ser executados em ambiente local/descartável com as migrations aplicadas: `supabase start`, `supabase db reset` e `supabase test db`. O arquivo `supabase/tests/security_rls.test.sql` declara `extensions.plan(19)` e contém 19 chamadas de asserção. A execução bem-sucedida de `supabase test db` no CI é a evidência necessária para considerar a suíte validada.
+
+### Limpeza automática da auditoria
+
+A migration `20261125000400_audit_cleanup_schedule.sql` habilita `pg_cron` e instala idempotentemente o job `uatiappy-cleanup-employee-creation-audit`, diariamente às 03:17 UTC. A rotina finaliza reservas `PENDING` com mais de 15 minutos como `FAILURE/AUDIT_FINALIZATION_TIMEOUT` e remove registros com mais de 90 dias. Cada execução grava início, término, quantidade de pendências finalizadas, quantidade removida e estado em `employee_creation_audit_cleanup_runs`; erros são registrados e relançados para que o Supabase Cron também registre falha.
+
+Para verificar no banco de destino:
+
+```sql
+select jobid, jobname, schedule, command, active
+from cron.job
+where jobname = 'uatiappy-cleanup-employee-creation-audit';
+
+select *
+from cron.job_run_details
+where jobid = (
+  select jobid from cron.job
+  where jobname = 'uatiappy-cleanup-employee-creation-audit'
+)
+order by start_time desc
+limit 20;
+
+select *
+from public.employee_creation_audit_cleanup_runs
+order by started_at desc
+limit 20;
+```
+
+A migration configura o agendamento no banco em que for aplicada. Em Supabase hospedado, a instalação e a primeira execução precisam ser confirmadas no projeto de destino; o código versionado e os testes locais não comprovam, por si só, que a migration já foi aplicada remotamente. Em caso de falha, consulte `cron.job_run_details` e `employee_creation_audit_cleanup_runs`, corrija a causa e execute manualmente `select public.cleanup_employee_creation_audit();` com uma identidade administrativa confiável. A função não pode ser executada por `anon` ou `authenticated`.
+
+Antes de produção, revisar o esquema final, executar os testes integrados e confirmar Auth, CORS, segredos e agendamento no projeto hospedado.
 
 ## Observações operacionais
 - A tela administrativa permite criar, bloquear, desativar e reativar contas de funcionários.
