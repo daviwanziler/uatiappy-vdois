@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "UatiAppy",
+    "slug": "uatiappy",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "br.com.uatiappy.app"
+    },
+    "android": {
+      "package": "br.com.uatiappy.app"
+    }
+  }
+}
