@@ -21,8 +21,8 @@ Nunca coloque `service_role` em variáveis `VITE_*`, no navegador, no repositór
 - Papéis confiáveis: `ADMINISTRADOR` e `FUNCIONARIO`, derivados de `auth.users.raw_app_meta_data`; o cliente não pode alterar seu próprio papel.
 
 ## Migrações do banco
-A migração `supabase/migrations/20261125000100_security_baseline.sql` cria:
-- `employee_profiles` com papel e estado da conta;
+As migrações `supabase/migrations/20261125000100_security_baseline.sql` e `supabase/migrations/20261125000200_security_hardening.sql` criam e endurecem:
+- `employee_profiles` com papel e estado da conta; novos usuários sem marcador confiável permanecem `DISABLED`;
 - `conversations`, `conversation_participants` e `messages`;
 - políticas RLS e funções auxiliares para verificar conta ativa e participação;
 - RPC `create_direct_conversation`;
