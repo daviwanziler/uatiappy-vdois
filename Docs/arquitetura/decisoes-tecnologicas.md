@@ -8,7 +8,7 @@ Registrar as decisões tecnológicas adotadas para o UatiAppy e separar o que j�
 
 **Decisões confirmadas:** JavaScript, Supabase/PostgreSQL, Visual Studio Code, GitHub, GitHub Actions e Vercel para hospedagem Web.
 
-**Decisão técnica pendente:** framework/biblioteca de interface Web. React pode ser avaliado pelo TechLead, mas não deve ser tratado como aprovado antes do registro formal da decisão.
+**Direção técnica definida para o frontend:** HTML para estrutura, CSS para apresentação e JavaScript puro (Vanilla JavaScript) para lógica e interações. A equipe tentará essa abordagem no MVP, sem adotar React, Vite ou outro framework neste momento.
 
 As decisões anteriores de aplicativo nativo com React Native e Expo ficam **superadas** pela definição Web registrada nesta atualização. A aplicação não será PWA e não exigirá instalação.
 
@@ -19,7 +19,7 @@ As decisões anteriores de aplicativo nativo com React Native e Expo ficam **sup
 | Plataforma principal | Aplicação Web responsiva | Um único sistema para celular e computador |
 | Acesso | Navegador por URL | Acesso sem instalação |
 | Linguagem | JavaScript | Lógica e interface da aplicação |
-| Framework de interface | A definir pelo TechLead | Construção da interface Web |
+| Estrutura e interface | HTML e CSS | Estruturação e apresentação das páginas Web |\n| Lógica da aplicação | JavaScript puro (Vanilla JavaScript) | Interações e funcionalidades sem framework |
 | Editor | Visual Studio Code (VS Code) | Edição e organização do código-fonte |
 
 A interface deve adaptar-se a diferentes larguras de tela e permanecer utilizável em navegadores de celulares e computadores. Não incluir recursos de instalação PWA, service worker ou distribuição em lojas como requisito do MVP.
@@ -60,7 +60,7 @@ A Vercel será utilizada para hospedar a aplicação Web. O fluxo de deploy deve
 ## 6. Pontos ainda pendentes
 
 - [ ] TechLead definir e registrar o framework/biblioteca de interface Web e sua justificativa.
-- [ ] Confirmar a estrutura de pastas, roteamento, organização de componentes e convenções de código para a aplicação Web.
+- [ ] Definir a estrutura de pastas, organização dos módulos JavaScript, navegação entre páginas e convenções de código para a aplicação Web.
 - [ ] Definir quais recursos do Supabase serão utilizados no MVP (por exemplo, Auth, Realtime e RLS) e documentar suas configurações.
 - [ ] Definir a implementação segura das operações administrativas de contas, sem expor credenciais privilegiadas no navegador.
 - [ ] Definir ambientes de desenvolvimento, teste e produção e suas variáveis de ambiente, sem registrar valores secretos.
@@ -76,7 +76,7 @@ A Vercel será utilizada para hospedar a aplicação Web. O fluxo de deploy deve
 - Não expor credenciais privilegiadas do Supabase (como `service_role`) no bundle Web ou em variáveis públicas.
 - Aplicar autorização e políticas de acesso no backend/banco de dados; não confiar apenas em validações da interface.
 - Não considerar serviços Supabase, workflows, ambientes ou funcionalidades como implementados apenas por constarem nesta arquitetura.
-- Não considerar React aprovado até que a decisão do framework Web seja registrada pelo TechLead.
+- Não introduzir React, Vite ou outro framework sem uma decisão posterior registrada e justificada pela equipe.
 
 ## 8. Relação com o planejamento
 
