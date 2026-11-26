@@ -1,0 +1,12 @@
+{
+  "name": "uatiappy",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --env-file-if-exists=.env scripts/dev-server.mjs",
+    "build": "node --env-file-if-exists=.env scripts/write-config.mjs",
+    "test": "node --test tests/*.test.js",
+    "check:frontend": "node scripts/check-frontend.mjs"
+  }
+}
