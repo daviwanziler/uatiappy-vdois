@@ -18,10 +18,9 @@ As decisões anteriores de aplicativo nativo com React Native e Expo ficam **sup
 |---|---|---|
 | Plataforma principal | Aplicação Web responsiva | Um único sistema para celular e computador |
 | Acesso | Navegador por URL | Acesso sem instalação |
-| Linguagem | JavaScript | Lógica e interface da aplicação |
+| Linguagem | JavaScript puro (Vanilla JavaScript) | Lógica e interações da aplicação |
 | Estrutura das páginas | HTML | Estrutura semântica das páginas Web |
 | Estilos e responsividade | CSS | Apresentação e adaptação a telas |
-| Lógica da aplicação | JavaScript puro (Vanilla JavaScript) | Interações e funcionalidades sem framework |
 | Editor | Visual Studio Code (VS Code) | Edição e organização do código-fonte |
 
 A interface deve adaptar-se a diferentes larguras de tela e permanecer utilizável em navegadores de celulares e computadores. Não incluir recursos de instalação PWA, service worker ou distribuição em lojas como requisito do MVP.
