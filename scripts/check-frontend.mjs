@@ -11,6 +11,7 @@ const forbidden = /\b(?:ReactDOM|React\.createElement|import\.meta\.env|from\s*[
 const frontendFiles = []
 async function walk(dir) {
   for (const entry of await readdir(dir, { withFileTypes: true })) {
+    if (entry.isDirectory() && ['.git', 'node_modules'].includes(entry.name)) continue
     const path = join(dir, entry.name)
     if (entry.isDirectory()) await walk(path)
     else {
