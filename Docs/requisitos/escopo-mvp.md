@@ -1,6 +1,6 @@
 # Requisitos e escopo do MVP — UatiAppy
 
-> **Atualização de plataforma — 25/11/2026:** o UatiAppy será uma única aplicação Web responsiva, acessível por um link no navegador em celulares e computadores. Não será aplicativo nativo nem PWA e não exigirá instalação. JavaScript, VS Code, Supabase/PostgreSQL, Vercel, GitHub e GitHub Actions estão definidos. O framework de interface Web permanece pendente de decisão do TechLead. Referências anteriores a React Native/Expo ou distribuição mobile neste documento foram substituídas por esta direção Web.
+> **Atualização de plataforma — 25/11/2026:** o UatiAppy será uma única aplicação Web responsiva, acessível por um link no navegador em celulares e computadores. Não será aplicativo nativo nem PWA e não exigirá instalação. A direção proposta para o frontend é HTML, CSS e JavaScript puro (Vanilla JavaScript), sem React ou Vite. VS Code será o editor; Supabase/PostgreSQL, Vercel, GitHub e GitHub Actions compõem a infraestrutura prevista. Referências anteriores a React Native/Expo ou distribuição mobile neste documento foram substituídas por esta direção Web.
 
 > **Status:** versão inicial para revisão da equipe e validação do orientador.  
 > **Branch de documentação:** `docs/requisitos-escopo-mvp`.  
@@ -300,7 +300,7 @@ note bottom
   Administrador e Funcionário usam o aplicativo com
   permissões distintas. A autorização deve ser aplicada
   no backend, não apenas na interface.
-  Plataforma definida: aplicação Web responsiva em JavaScript; framework Web a definir pelo TechLead.
+  Plataforma definida: aplicação Web responsiva em JavaScript; HTML, CSS e JavaScript puro (sem framework) pelo TechLead.
 end note
 @enduml
 ```
@@ -645,7 +645,7 @@ ref over Usuario, App : Logout
 - Revisar a divisão lógica de componentes com base na arquitetura que a equipe vier a escolher.
 - Validar a sintaxe e a aplicação do perfil UML, incluindo estereótipos e metaclasses estendidas.
 - Substituir os valores ilustrativos do diagrama de objetos por um cenário acadêmico aprovado, sem usar dados pessoais reais.
-- Atualizar o diagrama de implantação conforme forem definidos os serviços Supabase, ambientes, framework Web, navegadores suportados e fluxo de deploy; a visão atual permanece conceitual.
+- Atualizar o diagrama de implantação conforme forem definidos os serviços Supabase, ambientes, estrutura dos arquivos, navegadores suportados e fluxo de deploy; a visão atual permanece conceitual.
 - Definir os estados oficiais da mensagem, eventos, transições e confirmações.
 - Confirmar se a entrega ao destinatário depende de ele estar online e como essa condição será identificada.
 - Revisar a visão geral de interação e ajustar sua notação ao padrão de modelagem adotado pela equipe.
@@ -653,7 +653,7 @@ ref over Usuario, App : Logout
 
 ## 11. Controle de alterações
 
-Esta versão incorpora as decisões de negócio informadas pelo PO em 25/11/2026: cadastro centralizado pela administração; senha inicial definida pela administração; redefinição de senha feita pela administração; bloqueio/desativação de contas pela administração; perfil Administrador com área exclusiva. A plataforma definida foi atualizada para aplicação Web responsiva, acessível por um único link em navegadores de celulares e computadores, sem aplicativo nativo e sem PWA. JavaScript, VS Code, Supabase/PostgreSQL, Vercel, GitHub e GitHub Actions permanecem definidos. React Native e Expo ficam superados para o escopo atual; o framework Web ainda deve ser escolhido e registrado pelo TechLead. Permanecem pendentes eventual validação formal do orientador (se exigida), a definição dos serviços Supabase e os ambientes e fluxos de deploy necessários. Alterações de escopo devem ser discutidas com o PO, avaliadas tecnicamente pelo TechLead, comunicadas à equipe e submetidas à validação do orientador quando necessário.
+Esta versão incorpora as decisões de negócio informadas pelo PO em 25/11/2026: cadastro centralizado pela administração; senha inicial definida pela administração; redefinição de senha feita pela administração; bloqueio/desativação de contas pela administração; perfil Administrador com área exclusiva. A plataforma definida foi atualizada para aplicação Web responsiva, acessível por um único link em navegadores de celulares e computadores, sem aplicativo nativo e sem PWA. JavaScript, VS Code, Supabase/PostgreSQL, Vercel, GitHub e GitHub Actions permanecem definidos. React Native e Expo ficam superados para o escopo atual; a abordagem inicial será HTML, CSS e JavaScript puro, sem framework; poderá ser reavaliada mediante justificativa técnica e alinhamento com a equipe. Permanecem pendentes eventual validação formal do orientador (se exigida), a definição dos serviços Supabase e os ambientes e fluxos de deploy necessários. Alterações de escopo devem ser discutidas com o PO, avaliadas tecnicamente pelo TechLead, comunicadas à equipe e submetidas à validação do orientador quando necessário.
 
 ---
 **UatiAppy — documentação de requisitos e escopo do MVP.**
