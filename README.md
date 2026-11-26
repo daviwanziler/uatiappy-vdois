@@ -24,7 +24,7 @@ Consulte esses documentos antes de implementar funcionalidades ou criar/alterar 
 | Tipo de aplicação | Web responsiva |
 | Acesso | Um único link pelo navegador em celular ou computador |
 | Linguagem | JavaScript |
-| Framework de interface Web | A definir pelo TechLead; React pode ser avaliado, mas ainda não está aprovado |
+| Tecnologias de interface | HTML, CSS e JavaScript puro (sem framework) |
 | Editor | Visual Studio Code |
 | Backend e banco de dados | Supabase / PostgreSQL |
 | Hospedagem da aplicação Web | Vercel |
@@ -53,7 +53,7 @@ Funcionalidades como grupos, anexos, edição/exclusão de mensagens e notifica�
 1. **Planejamento e requisitos:** levantamento, priorização e validação do escopo.
 2. **Modelagem:** elaboração dos diagramas UML necessários.
 3. **UX/UI:** desenho dos fluxos e interfaces dos casos de uso prioritários, considerando celular e computador.
-4. **Arquitetura e desenvolvimento:** implementação da aplicação Web responsiva em JavaScript, com framework a definir.
+4. **Arquitetura e desenvolvimento:** implementação da aplicação Web responsiva com HTML, CSS e JavaScript puro, sem React, Vite ou outro framework neste momento.
 5. **Persistência:** estruturação do armazenamento e integração com Supabase.
 6. **Hospedagem e automação:** publicação Web na Vercel e verificações de CI/CD pelo GitHub Actions.
 7. **Testes e validação:** verificação dos requisitos funcionais e não funcionais em navegadores e tamanhos de tela acordados.
