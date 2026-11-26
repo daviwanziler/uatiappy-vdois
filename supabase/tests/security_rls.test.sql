@@ -166,7 +166,7 @@ begin
   for v_index in 1..5 loop
     select * into v_attempt
     from public.reserve_employee_creation_attempt(
-      'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
       null,
       5
     );
@@ -182,7 +182,7 @@ begin
 end $$;
 select extensions.is(
   (select count(*)::int from public.employee_creation_audit
-   where actor_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+   where actor_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
      and outcome = 'UNAUTHORIZED'),
   5,
   'the first five unauthorized attempts are recorded for investigation'
@@ -194,19 +194,19 @@ select extensions.is(
 );
 select extensions.is(
   (select actor_id from public.employee_creation_audit where email_sha256 = encode(digest('employee@example.com', 'sha256'), 'hex')),
-  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'::uuid,
+  'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'::uuid,
   'actor UUID remains separate from target email hash'
 );
 select extensions.is(
   (select allowed from public.reserve_employee_creation_attempt(
-    'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', null, 5
+    'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', null, 5
   )),
   false,
   'the sixth unauthorized attempt is rate limited'
 );
 select extensions.is(
   (select count(*)::int from public.employee_creation_audit
-   where actor_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'),
+   where actor_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'),
   5,
   'rate-limited retries do not create additional audit rows'
 );
