@@ -1,4 +1,4 @@
-name: Frontend build
+name: Frontend and security checks
 
 on:
   pull_request:
@@ -7,42 +7,38 @@ on:
     branches: [main]
 
 jobs:
-  build:
+  frontend:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run unit tests
+      - name: Validate static frontend
+        run: npm run check:frontend
+      - name: Run JavaScript unit tests
         run: npm test
+      - name: Verify static deployment configuration
+        run: npm run build
 
-      - name: Set up Deno
-        uses: denoland/setup-deno@v2
-
+  deno-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
       - name: Test Edge Function security helpers
         run: deno test --allow-env supabase/functions/tests/security_test.ts
 
-      - name: Set up Supabase CLI
-        uses: supabase/setup-cli@v1
+  supabase-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
         with:
           version: latest
-
       - name: Start local Supabase
         run: supabase start
-
-      - name: Apply migrations
+      - name: Apply migrations to clean local database
         run: supabase db reset
-
       - name: Run pgTAP security tests
         run: supabase test db
-
-      - name: Build frontend
-        run: npm run build

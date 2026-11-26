@@ -1,42 +1,42 @@
 # UatiAppy — desenvolvimento
 
-## Stack inicial
+## Stack atual
 
-- React
-- JavaScript (ES modules)
-- Vite
-- Node.js e npm
+- HTML5, CSS3 e JavaScript puro (módulos ES)
+- Supabase Auth, PostgreSQL, RLS e Edge Functions
+- Vercel para hospedagem estática
+- Node.js 22+ apenas para scripts de desenvolvimento, configuração e testes
+- Visual Studio Code como editor
 
-O frontend é uma aplicação web. O Supabase/PostgreSQL e a hospedagem Vercel
-fazem parte da arquitetura proposta, mas ainda não foram conectados nesta
-etapa de bootstrap.
+React, React Native, Expo, Vite e bundlers não fazem parte do frontend nesta etapa.
 
-## Pré-requisitos
+## Configuração local
 
-- Node.js 22 ou versão LTS compatível
-- npm
+1. Instale Node.js 22 ou superior.
+2. Copie `.env.example` para `.env`.
+3. Preencha `SUPABASE_URL` e `SUPABASE_ANON_KEY` com a URL e a chave pública/anon do projeto.
+4. Execute `npm run dev`.
+5. Acesse http://localhost:4173.
 
-## Executar localmente
+O servidor local usa apenas módulos nativos do Node.js. O SDK Supabase é carregado pelo navegador via CDN com versão fixada.
 
-```bash
-npm install
-npm run dev
-```
-
-O Vite informará o endereço local para abrir no navegador.
-
-## Verificar a compilação
+## Testes e validação
 
 ```bash
+npm test
+npm run check:frontend
 npm run build
-npm run preview
+deno test --allow-env supabase/functions/tests/security_test.ts
+supabase start
+supabase db reset
+supabase test db
 ```
 
-Os arquivos compilados são gerados em `dist/`. Não versionar `node_modules/`
-ou `dist/`.
+O build não compila o frontend: gera `public/js/config.js` a partir das variáveis de ambiente. Sem variáveis configuradas, o site é gerado em modo sem conexão para permitir validação estática.
 
-## Variáveis de ambiente
+## Segurança
 
-Não coloque chaves, tokens ou credenciais no código-fonte. Quando a integração
-com serviços externos for implementada, documentaremos as variáveis necessárias
-em um arquivo `.env.example`, sem valores secretos.
+- Nunca coloque `service_role` no frontend, em `public/js/config.js`, no repositório ou em variáveis destinadas ao navegador.
+- A chave anon é pública e depende das políticas RLS para proteger os dados.
+- Cadastro de funcionários e alteração de status usam Edge Functions; o servidor valida JWT, papel e estado da conta.
+- Não habilite cadastro público no Supabase Auth.
