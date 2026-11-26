@@ -21,7 +21,7 @@ async function walk(dir) {
         errors.push(`${path}: arquivo React/Vite não permitido`)
       }
       if (['.html', '.js', '.css'].includes(extname(path))) frontendFiles.push(path)
-      if (extname(path) === '.js') javascriptFiles.push(path)
+      if (['.js', '.mjs'].includes(extname(path))) javascriptFiles.push(path)
     }
   }
 }

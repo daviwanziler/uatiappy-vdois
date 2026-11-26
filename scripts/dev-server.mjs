@@ -23,4 +23,4 @@ const server = createServer(async (req, res) => {
     res.end('Não encontrado')
   }
 })
-server.listen(Number(process.env.PORT ?? 4173), '0.0.0.0', () => console.log('UatiAppy em http://localhost:4173'))
+server.listen(Number(process.env.PORT ?? 5173), '0.0.0.0', () => console.log('UatiAppy em http://localhost:5173'))

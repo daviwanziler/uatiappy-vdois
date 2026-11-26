@@ -16,7 +16,7 @@ React, React Native, Expo, Vite e bundlers não fazem parte do frontend nesta et
 2. Copie `.env.example` para `.env`.
 3. Preencha `SUPABASE_URL` e `SUPABASE_ANON_KEY` com a URL e a chave pública/anon do projeto.
 4. Execute `npm run dev`.
-5. Acesse http://localhost:4173.
+5. Acesse http://localhost:5173.
 
 O servidor local usa apenas módulos nativos do Node.js. O SDK Supabase é carregado pelo navegador via CDN com versão fixada.
 
