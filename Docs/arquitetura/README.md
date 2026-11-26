@@ -19,7 +19,6 @@ A fonte PlantUML é a referência editável atual. Não considerar o PDF sincron
 | Estilos e responsividade | CSS |
 | Linguagem e interações | JavaScript puro (Vanilla JavaScript) |
 | Editor | Visual Studio Code |
-| Editor | Visual Studio Code |
 | Backend e banco de dados | Supabase / PostgreSQL |
 | Hospedagem Web | Vercel |
 | Versionamento e gestão | Git e GitHub |
