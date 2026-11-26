@@ -15,8 +15,10 @@ A fonte PlantUML é a referência editável atual. Não considerar o PDF sincron
 |---|---|
 | Tipo de aplicação | Web responsiva |
 | Acesso | Um único link no navegador |
-| Estrutura das páginas | HTML |\n| Estilos e responsividade | CSS |\n| Linguagem e interações | JavaScript puro (Vanilla JavaScript) |
-| Framework de interface Web | A definir pelo TechLead |
+| Estrutura das páginas | HTML |
+| Estilos e responsividade | CSS |
+| Linguagem e interações | JavaScript puro (Vanilla JavaScript) |
+| Editor | Visual Studio Code |
 | Editor | Visual Studio Code |
 | Backend e banco de dados | Supabase / PostgreSQL |
 | Hospedagem Web | Vercel |
