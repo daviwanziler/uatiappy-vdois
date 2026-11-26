@@ -15,7 +15,7 @@ A fonte PlantUML é a referência editável atual. Não considerar o PDF sincron
 |---|---|
 | Tipo de aplicação | Web responsiva |
 | Acesso | Um único link no navegador |
-| Linguagem | JavaScript |
+| Estrutura das páginas | HTML |\n| Estilos e responsividade | CSS |\n| Linguagem e interações | JavaScript puro (Vanilla JavaScript) |
 | Framework de interface Web | A definir pelo TechLead |
 | Editor | Visual Studio Code |
 | Backend e banco de dados | Supabase / PostgreSQL |
@@ -25,7 +25,7 @@ A fonte PlantUML é a referência editável atual. Não considerar o PDF sincron
 
 A aplicação funcionará em navegadores de celulares e computadores, adaptando a interface ao tamanho da tela. Não será aplicativo nativo, PWA ou instalação de loja.
 
-O framework Web ainda deve ser definido pelo TechLead antes do bootstrap. React é uma alternativa a avaliar, não uma decisão confirmada nesta atualização.
+A proposta para o MVP é desenvolver a interface com HTML, CSS e JavaScript puro, sem React, Vite ou outro framework. O VS Code será o editor de código; não é uma tecnologia de execução da aplicação.
 
 O Supabase será utilizado como backend e banco de dados. A aplicação Web deverá consumir seus recursos por SDK/API, com configurações adequadas para cliente. Chaves privilegiadas nunca podem ser incluídas no bundle Web ou expostas ao navegador. A seleção e configuração efetiva de Auth, RLS, Realtime, tabelas, relacionamentos, funções e políticas devem seguir os requisitos aprovados.
 
@@ -44,4 +44,4 @@ Os procedimentos de provisionamento inicial do Administrador, entrega segura de 
 
 ## Coerência documental
 
-Esta documentação deve permanecer alinhada a [Requisitos e escopo do MVP](../requisitos/escopo-mvp.md) e a [Decisões Tecnológicas](./decisoes-tecnologicas.md). A plataforma Web, JavaScript, Supabase/PostgreSQL, Vercel, GitHub e GitHub Actions estão definidos. O framework Web, os serviços Supabase efetivamente necessários e os ambientes ainda devem ser detalhados em Issues e decisões técnicas.
+Esta documentação deve permanecer alinhada a [Requisitos e escopo do MVP](../requisitos/escopo-mvp.md) e a [Decisões Tecnológicas](./decisoes-tecnologicas.md). A plataforma Web, HTML, CSS, JavaScript puro, VS Code, Supabase/PostgreSQL, Vercel, GitHub e GitHub Actions compõem a direção técnica registrada. Os serviços Supabase efetivamente necessários e os ambientes ainda devem ser detalhados em Issues e decisões técnicas.
