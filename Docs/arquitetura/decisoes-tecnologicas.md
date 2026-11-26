@@ -19,7 +19,9 @@ As decisões anteriores de aplicativo nativo com React Native e Expo ficam **sup
 | Plataforma principal | Aplicação Web responsiva | Um único sistema para celular e computador |
 | Acesso | Navegador por URL | Acesso sem instalação |
 | Linguagem | JavaScript | Lógica e interface da aplicação |
-| Estrutura e interface | HTML e CSS | Estruturação e apresentação das páginas Web |\n| Lógica da aplicação | JavaScript puro (Vanilla JavaScript) | Interações e funcionalidades sem framework |
+| Estrutura das páginas | HTML | Estrutura semântica das páginas Web |
+| Estilos e responsividade | CSS | Apresentação e adaptação a telas |
+| Lógica da aplicação | JavaScript puro (Vanilla JavaScript) | Interações e funcionalidades sem framework |
 | Editor | Visual Studio Code (VS Code) | Edição e organização do código-fonte |
 
 A interface deve adaptar-se a diferentes larguras de tela e permanecer utilizável em navegadores de celulares e computadores. Não incluir recursos de instalação PWA, service worker ou distribuição em lojas como requisito do MVP.
@@ -59,7 +61,7 @@ A Vercel será utilizada para hospedar a aplicação Web. O fluxo de deploy deve
 
 ## 6. Pontos ainda pendentes
 
-- [ ] TechLead definir e registrar o framework/biblioteca de interface Web e sua justificativa.
+- [ ] Validar com PO e equipe a abordagem HTML, CSS e JavaScript puro e registrar eventual necessidade de reavaliação.
 - [ ] Definir a estrutura de pastas, organização dos módulos JavaScript, navegação entre páginas e convenções de código para a aplicação Web.
 - [ ] Definir quais recursos do Supabase serão utilizados no MVP (por exemplo, Auth, Realtime e RLS) e documentar suas configurações.
 - [ ] Definir a implementação segura das operações administrativas de contas, sem expor credenciais privilegiadas no navegador.
@@ -82,4 +84,4 @@ A Vercel será utilizada para hospedar a aplicação Web. O fluxo de deploy deve
 
 Este registro complementa a Issue #55 — [Definir arquitetura e padrões técnicos do UatiAppy](https://github.com/daviwanziler/uatiappy-vdois/issues/55) — e deve ser lido em conjunto com o escopo do MVP, o README e o diagrama de arquitetura.
 
-A plataforma Web responsiva, o acesso por navegador, JavaScript, Supabase/PostgreSQL, Vercel, GitHub e GitHub Actions estão definidos. O framework Web e os detalhes específicos de implementação continuam pendentes e devem ser decididos antes do bootstrap e do início das implementações dependentes.
+A plataforma Web responsiva e a abordagem HTML, CSS e JavaScript puro estão registradas como direção inicial para o MVP. VS Code é o editor; Supabase/PostgreSQL, Vercel, GitHub e GitHub Actions compõem a infraestrutura. Os detalhes de implementação e os serviços Supabase necessários devem ser refinados antes das tarefas dependentes.
