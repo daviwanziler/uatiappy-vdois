@@ -185,9 +185,9 @@ Antes de iniciar uma implementação, a equipe deve conferir se já existe uma I
 - Definir como o usuário localizará o outro participante.
 - Confirmar o significado e as transições dos estados da mensagem.
 - Decidir se a entrega em tempo real é requisito obrigatório e qual mecanismo será adotado.
-- A plataforma definida é uma aplicação Web responsiva, acessada por um único link em celulares e computadores. JavaScript, VS Code, Supabase/PostgreSQL, Vercel, GitHub e GitHub Actions estão definidos. O framework de interface Web ainda deve ser escolhido e registrado pelo TechLead. Registrar eventual validação formal do orientador, se exigida pelo processo acadêmico.
-- Definir as versões de Android/iOS e os dispositivos móveis suportados.
-- Confirmar a estratégia de builds, testes em dispositivos e distribuição do aplicativo.
+- A plataforma definida é uma aplicação Web responsiva, acessada por um único link em celulares e computadores. A abordagem inicial será HTML, CSS e JavaScript puro, sem React ou Vite; VS Code será o editor. Supabase/PostgreSQL, Vercel, GitHub e GitHub Actions compõem a infraestrutura prevista. Registrar a validação da abordagem com a equipe e eventual validação formal do orientador, se exigida.
+- Definir navegadores, versões e tamanhos de tela que serão suportados e testados.
+- Definir a estrutura dos arquivos e módulos JavaScript, além da estratégia de testes Web.
 - Confirmar quais serviços Supabase serão utilizados (Auth, PostgreSQL, Realtime, RLS e demais recursos), conforme os requisitos.
 - Estabelecer metas mensuráveis para desempenho e demais RNFs que exigirem quantificação.
 - Confirmar se todos os itens listados no MVP são compatíveis com o prazo e as orientações acadêmicas.
@@ -278,7 +278,7 @@ end note
 @startuml
 title UatiAppy - Diagrama de Componentes (visao logica)
 
-component "Aplicação Web responsiva (JavaScript; framework a definir)" as UI
+component "Aplicação Web responsiva (HTML, CSS e JavaScript puro)" as UI
 component "Area Administrativa (perfil Administrador)" as ADMINUI
 component "Responsabilidade de Autenticacao e Autorizacao" as AUTH
 component "Responsabilidade de Conversas" as CONV
@@ -300,7 +300,7 @@ note bottom
   Administrador e Funcionário usam o aplicativo com
   permissões distintas. A autorização deve ser aplicada
   no backend, não apenas na interface.
-  Plataforma definida: aplicação Web responsiva em JavaScript; HTML, CSS e JavaScript puro (sem framework) pelo TechLead.
+  Plataforma definida: aplicação Web responsiva com HTML, CSS e JavaScript puro, sem framework no MVP.
 end note
 @enduml
 ```
@@ -391,7 +391,7 @@ end note
 
 #### 10.1.5 Diagrama de Implantação
 
-**Objetivo:** representar os nós lógicos dos navegadores em celulares e computadores, da hospedagem Web, do backend e da persistência. A aplicação Web usa JavaScript; o framework de interface e a configuração final dos serviços Supabase ainda dependem de definição.
+**Objetivo:** representar os nós lógicos dos navegadores em celulares e computadores, da hospedagem Web, do backend e da persistência. A aplicação Web usa HTML, CSS e JavaScript puro; a configuração final dos serviços Supabase ainda depende de definição.
 
 **Rastreabilidade:** RNF-002, RNF-003, RNF-005, RNF-006 e RNF-010.
 
@@ -406,7 +406,7 @@ node "Navegador em computador" as DESKTOP {
   artifact "UatiAppy Web responsiva" as DESKTOPAPP
 }
 node "Hospedagem Web — Vercel" as HOST {
-  artifact "Aplicacao Web publicada\nJavaScript; framework a definir" as WEBAPP
+  artifact "Aplicacao Web publicada\nHTML, CSS e JavaScript puro" as WEBAPP
 }
 cloud "Backend — Supabase" as BACKEND {
   component "Servicos/API" as API
@@ -431,7 +431,7 @@ note bottom
   Um unico sistema Web responsivo para celular e computador.
   Nao e aplicativo nativo nem PWA; nao exige instalacao.
   JavaScript, Supabase/PostgreSQL, Vercel, GitHub e
-  GitHub Actions estao definidos. Framework Web e recursos
+  GitHub Actions estao definidos. HTML, CSS e JavaScript puro compoem o frontend. Recursos
   Supabase especificos ainda serao formalizados.
   Segredos e chaves privilegiadas nunca ficam no navegador.
 end note
@@ -653,7 +653,7 @@ ref over Usuario, App : Logout
 
 ## 11. Controle de alterações
 
-Esta versão incorpora as decisões de negócio informadas pelo PO em 25/11/2026: cadastro centralizado pela administração; senha inicial definida pela administração; redefinição de senha feita pela administração; bloqueio/desativação de contas pela administração; perfil Administrador com área exclusiva. A plataforma definida foi atualizada para aplicação Web responsiva, acessível por um único link em navegadores de celulares e computadores, sem aplicativo nativo e sem PWA. JavaScript, VS Code, Supabase/PostgreSQL, Vercel, GitHub e GitHub Actions permanecem definidos. React Native e Expo ficam superados para o escopo atual; a abordagem inicial será HTML, CSS e JavaScript puro, sem framework; poderá ser reavaliada mediante justificativa técnica e alinhamento com a equipe. Permanecem pendentes eventual validação formal do orientador (se exigida), a definição dos serviços Supabase e os ambientes e fluxos de deploy necessários. Alterações de escopo devem ser discutidas com o PO, avaliadas tecnicamente pelo TechLead, comunicadas à equipe e submetidas à validação do orientador quando necessário.
+Esta versão incorpora as decisões de negócio informadas pelo PO em 25/11/2026: cadastro centralizado pela administração; senha inicial definida pela administração; redefinição de senha feita pela administração; bloqueio/desativação de contas pela administração; perfil Administrador com área exclusiva. A plataforma definida foi atualizada para aplicação Web responsiva, acessível por um único link em navegadores de celulares e computadores, sem aplicativo nativo e sem PWA. HTML, CSS e JavaScript puro ficam registrados como abordagem inicial do frontend para o MVP, sem React ou Vite. VS Code será o editor; Supabase/PostgreSQL, Vercel, GitHub e GitHub Actions compõem a infraestrutura. A abordagem poderá ser reavaliada mediante justificativa técnica e alinhamento com a equipe. Permanecem pendentes eventual validação formal do orientador (se exigida), a definição dos serviços Supabase e os ambientes e fluxos de deploy necessários. Alterações de escopo devem ser discutidas com o PO, avaliadas tecnicamente pelo TechLead, comunicadas à equipe e submetidas à validação do orientador quando necessário.
 
 ---
 **UatiAppy — documentação de requisitos e escopo do MVP.**
