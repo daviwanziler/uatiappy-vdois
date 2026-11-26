@@ -16,7 +16,7 @@ node "Navegador em computador" as DesktopBrowser {
 }
 
 cloud "Vercel — hospedagem Web" as Vercel {
-  component "Aplicação Web publicada\nframework a definir" as WebApp
+  component "Aplicação Web publicada\nHTML + CSS + JavaScript puro" as WebApp
 }
 
 cloud "Supabase — backend como serviço" as Supabase {
@@ -75,7 +75,7 @@ note bottom
   Plataforma definida: aplicação Web responsiva,
   acessível por um único link em navegadores de
   celulares e computadores. Linguagem: JavaScript.
-  Framework Web ainda será definido pelo TechLead.
+  Frontend: HTML, CSS e JavaScript puro, sem framework no MVP.
   Não é aplicativo nativo nem PWA.
   Supabase/PostgreSQL fornece backend e dados.
   Vercel hospeda a aplicação Web.
