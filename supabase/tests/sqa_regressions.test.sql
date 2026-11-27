@@ -4,8 +4,11 @@ begin;
 create extension if not exists pgtap with schema extensions;
 select extensions.plan(7);
 
-\set audit_actor '11111111-1111-4111-8111-111111111111'
+\\set audit_actor '11111111-1111-4111-8111-111111111111'
+\\set target_hash 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 
+-- Use a unique email/hash fixture; assertions continue to find the row after
+-- reconciliation changes detail_code from the fixture marker to its final code.
 insert into auth.users(
   id, aud, role, email, encrypted_password, email_confirmed_at,
   raw_app_meta_data, raw_user_meta_data, created_at, updated_at
@@ -29,7 +32,8 @@ select extensions.is(
   'a recent pending attempt cannot be reconciled as an earlier successful account'
 );
 select extensions.is(
-  (select outcome from public.employee_creation_audit where detail_code = 'SQA_RECONCILIATION_FIXTURE'),
+  (select outcome from public.employee_creation_audit
+   where email_sha256 = encode(extensions.digest('sqa-reconcile@uatiappy.test', 'sha256'), 'hex')),
   'PENDING',
   'a recent duplicate attempt remains pending until independently resolved'
 );
@@ -38,7 +42,7 @@ select extensions.is(
 -- after a durable reservation whose final audit update was interrupted.
 update public.employee_creation_audit
 set created_at = now() - interval '20 minutes'
-where detail_code = 'SQA_RECONCILIATION_FIXTURE';
+where email_sha256 = encode(extensions.digest('sqa-reconcile@uatiappy.test', 'sha256'), 'hex');
 
 select extensions.is(
   public.reconcile_employee_creation_by_email_hash(encode(extensions.digest('sqa-reconcile@uatiappy.test', 'sha256'), 'hex')),
@@ -46,7 +50,8 @@ select extensions.is(
   'a stale attempt correlated to an Auth account created afterward can be reconciled'
 );
 select extensions.is(
-  (select outcome from public.employee_creation_audit where detail_code = 'SQA_RECONCILIATION_FIXTURE'),
+  (select outcome from public.employee_creation_audit
+   where email_sha256 = encode(extensions.digest('sqa-reconcile@uatiappy.test', 'sha256'), 'hex')),
   'SUCCESS',
   'the correlated stale audit attempt is marked successful'
 );
@@ -64,7 +69,8 @@ select extensions.ok(
 
 delete from auth.users where id = :'audit_actor';
 select extensions.is(
-  (select actor_id from public.employee_creation_audit where detail_code = 'SQA_RECONCILIATION_FIXTURE'),
+  (select actor_id from public.employee_creation_audit
+   where email_sha256 = encode(extensions.digest('sqa-reconcile@uatiappy.test', 'sha256'), 'hex')),
   null::uuid,
   'deleting the Auth actor preserves the audit row and anonymizes actor_id'
 );
