@@ -1,8 +1,8 @@
 -- Run with: supabase test db
--- pgTAP plan is 23 assertions. Run only against a disposable local/test Supabase project.
+-- pgTAP plan is 30 assertions. Run only against a disposable local/test Supabase project.
 begin;
 create extension if not exists pgtap with schema extensions;
-select extensions.plan(23);
+select extensions.plan(30);
 
 \set user_a 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
 \set user_b 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
@@ -37,31 +37,72 @@ values
    '{"provider":"email","providers":["email"]}', '{"role":"ADMINISTRADOR"}', now(), now());
 
 -- Simulate Auth account creation succeeding while the audit remains pending.
-insert into public.employee_creation_audit(actor_id, email_sha256, outcome, detail_code)
+insert into public.employee_creation_audit(actor_id, email_sha256, outcome, detail_code, created_at)
 values (
   :'user_a',
   encode(extensions.digest('a@uatiappy.test', 'sha256'), 'hex'),
   'PENDING',
-  'SIMULATED_AUDIT_FINALIZE_FAILURE'
+  'SIMULATED_AUDIT_FINALIZE_FAILURE',
+  now() - interval '1 minute'
+);
+insert into public.employee_creation_audit(actor_id, email_sha256, outcome, detail_code)
+values (
+  :'blocked_user',
+  encode(extensions.digest('a@uatiappy.test', 'sha256'), 'hex'),
+  'PENDING',
+  'RETRY_REQUEST_RECEIVED'
 );
 select extensions.is(
-  public.reconcile_employee_creation_by_email_hash(encode(extensions.digest('a@uatiappy.test', 'sha256'), 'hex')),
-  :'user_a'::uuid,
-  'reconciliation locates the already-created Auth account by normalized email hash'
+  public.reconcile_employee_creation_by_email_hash(
+    (select id from public.employee_creation_audit where actor_id = :'blocked_user' and outcome = 'PENDING'
+     and email_sha256 = encode(extensions.digest('a@uatiappy.test', 'sha256'), 'hex')),
+    encode(extensions.digest('a@uatiappy.test', 'sha256'), 'hex')
+  ) ->> 'status',
+  'RECOVERED',
+  'reconciliation recovers only an older correlated pending attempt'
 );
 select extensions.is(
   (select outcome from public.employee_creation_audit
-   where email_sha256 = encode(extensions.digest('a@uatiappy.test', 'sha256'), 'hex')
-   order by created_at desc limit 1),
+   where actor_id = :'user_a' and email_sha256 = encode(extensions.digest('a@uatiappy.test', 'sha256'), 'hex')),
   'SUCCESS',
-  'reconciliation changes the pending audit to SUCCESS'
+  'the original pending audit is marked SUCCESS'
 );
 select extensions.is(
   (select account_user_id from public.employee_creation_audit
-   where email_sha256 = encode(extensions.digest('a@uatiappy.test', 'sha256'), 'hex')
-   order by created_at desc limit 1),
+   where actor_id = :'user_a' and email_sha256 = encode(extensions.digest('a@uatiappy.test', 'sha256'), 'hex')),
   :'user_a'::uuid,
   'reconciliation stores the created Auth user id for traceability'
+);
+select extensions.is(
+  (select detail_code from public.employee_creation_audit
+   where actor_id = :'blocked_user' and email_sha256 = encode(extensions.digest('a@uatiappy.test', 'sha256'), 'hex')),
+  'RETRY_RECONCILED_PREVIOUS_ATTEMPT',
+  'the retry is not recorded as a second successful creation'
+);
+
+-- An existing account without a matching older pending attempt is a duplicate,
+-- not a successful reconciliation.
+insert into public.employee_creation_audit(actor_id, email_sha256, outcome, detail_code)
+values (
+  :'blocked_user',
+  encode(extensions.digest('unprovisioned@uatiappy.test', 'sha256'), 'hex'),
+  'PENDING',
+  'DUPLICATE_RETRY_RECEIVED'
+);
+select extensions.is(
+  public.reconcile_employee_creation_by_email_hash(
+    (select id from public.employee_creation_audit where actor_id = :'blocked_user'
+     and detail_code = 'DUPLICATE_RETRY_RECEIVED'),
+    encode(extensions.digest('unprovisioned@uatiappy.test', 'sha256'), 'hex')
+  ) ->> 'status',
+  'DUPLICATE',
+  'an existing account without a correlated pending attempt is rejected as duplicate'
+);
+select extensions.is(
+  (select outcome from public.employee_creation_audit
+   where actor_id = :'blocked_user' and detail_code = 'DUPLICATE_EMAIL'),
+  'FAILURE',
+  'duplicate retry is not written as a successful creation'
 );
 
 insert into public.conversations(id, created_by) values
@@ -211,6 +252,55 @@ select extensions.is(
   'rate-limited retries do not create additional audit rows'
 );
 reset role;
+
+-- The cleanup job records a durable successful run with counters.
+set local role service_role;
+select public.cleanup_employee_creation_audit();
+select extensions.ok(
+  exists (
+    select 1 from public.employee_creation_audit_cleanup_runs
+    where status = 'SUCCESS' and finished_at is not null
+      and pending_finalized >= 0 and records_deleted >= 0
+  ),
+  'audit cleanup records completion and execution counters'
+);
+reset role;
+
+-- A simulated deletion failure must persist a FAILURE execution record.
+create or replace function public.test_fail_audit_cleanup_delete()
+returns trigger language plpgsql as $$$$
+begin
+  raise exception 'simulated cleanup failure';
+end;
+$$$$;
+create trigger test_fail_audit_cleanup_delete
+before delete on public.employee_creation_audit
+for each row execute function public.test_fail_audit_cleanup_delete();
+insert into public.employee_creation_audit(actor_id, outcome, detail_code, created_at)
+values (:'user_a', 'SUCCESS', 'SIMULATED_OLD_AUDIT', now() - interval '100 days');
+set local role service_role;
+select extensions.is(public.cleanup_employee_creation_audit(), -1, 'cleanup reports a failure sentinel when maintenance fails');
+select extensions.ok(
+  exists (
+    select 1 from public.employee_creation_audit_cleanup_runs
+    where status = 'FAILURE' and finished_at is not null
+      and error_message like 'SQLSTATE=%'
+  ),
+  'cleanup failure remains observable in a committed execution record'
+);
+reset role;
+drop trigger test_fail_audit_cleanup_delete on public.employee_creation_audit;
+drop function public.test_fail_audit_cleanup_delete();
+
+-- Deleting an Auth user must not cascade-delete historical audit evidence.
+insert into public.employee_creation_audit(actor_id, outcome, detail_code)
+values (:'unprovisioned_user', 'SUCCESS', 'PRESERVE_ON_ACTOR_DELETE');
+delete from auth.users where id = :'unprovisioned_user';
+select extensions.is(
+  (select count(*)::int from public.employee_creation_audit where actor_id = :'unprovisioned_user'),
+  1,
+  'audit history survives deletion of its actor account'
+);
 
 select * from extensions.finish();
 rollback;

@@ -1,4 +1,5 @@
 import { createServer } from 'node:http'
+import { isIP } from 'node:net'
 import { readFile, stat } from 'node:fs/promises'
 import { extname, join, normalize } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -7,6 +8,18 @@ import { spawnSync } from 'node:child_process'
 const root = fileURLToPath(new URL('../public/', import.meta.url))
 const generated = spawnSync(process.execPath, ['--env-file-if-exists=.env', 'scripts/write-config.mjs'], { stdio: 'inherit' })
 if (generated.status !== 0) process.exit(generated.status ?? 1)
+
+const host = (process.env.HOST ?? '127.0.0.1').trim()
+const isLoopback = host === 'localhost' || host === '127.0.0.1' || host === '::1'
+if (!host || (isIP(host) === 0 && host !== 'localhost')) {
+  throw new Error('HOST inválido. Use localhost, 127.0.0.1 ou ::1; para expor na rede, informe um IP explícito.')
+}
+if (!isLoopback && process.env.ALLOW_EXTERNAL_DEV_HOST !== 'true') {
+  throw new Error('Exposição externa bloqueada. Defina ALLOW_EXTERNAL_DEV_HOST=true explicitamente para habilitá-la.')
+}
+
+const port = Number(process.env.PORT ?? 5173)
+if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('PORT deve ser um inteiro entre 1 e 65535.')
 
 const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml' }
 const server = createServer(async (req, res) => {
@@ -23,4 +36,4 @@ const server = createServer(async (req, res) => {
     res.end('Não encontrado')
   }
 })
-server.listen(Number(process.env.PORT ?? 5173), '0.0.0.0', () => console.log('UatiAppy em http://localhost:5173'))
+server.listen(port, host, () => console.log(`UatiAppy em http://${host}:${port}`))
