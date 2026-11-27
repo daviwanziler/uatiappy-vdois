@@ -127,7 +127,9 @@ begin
         status = 'FAILURE',
         error_message = left('SQLSTATE=' || sqlstate || '; rotina de limpeza falhou', 1000)
     where id = v_run_id;
-    raise;
+    -- Returning a sentinel keeps the failure record committed; re-raising would
+    -- roll back the entire function statement, including its observability row.
+    return -1;
   end;
 
   return v_deleted;
