@@ -1,8 +1,8 @@
 -- Run with: supabase test db
--- pgTAP plan is 23 assertions. Run only against a disposable local/test Supabase project.
+-- pgTAP plan is 30 assertions. Run only against a disposable local/test Supabase project.
 begin;
 create extension if not exists pgtap with schema extensions;
-select extensions.plan(28);
+select extensions.plan(30);
 
 \set user_a 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
 \set user_b 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
@@ -265,6 +265,32 @@ select extensions.ok(
   'audit cleanup records completion and execution counters'
 );
 reset role;
+
+-- A simulated deletion failure must persist a FAILURE execution record.
+create or replace function public.test_fail_audit_cleanup_delete()
+returns trigger language plpgsql as $
+begin
+  raise exception 'simulated cleanup failure';
+end;
+$;
+create trigger test_fail_audit_cleanup_delete
+before delete on public.employee_creation_audit
+for each row execute function public.test_fail_audit_cleanup_delete();
+insert into public.employee_creation_audit(actor_id, outcome, detail_code, created_at)
+values (:'user_a', 'SUCCESS', 'SIMULATED_OLD_AUDIT', now() - interval '100 days');
+set local role service_role;
+select extensions.is(public.cleanup_employee_creation_audit(), -1, 'cleanup reports a failure sentinel when maintenance fails');
+select extensions.ok(
+  exists (
+    select 1 from public.employee_creation_audit_cleanup_runs
+    where status = 'FAILURE' and finished_at is not null
+      and error_message like 'SQLSTATE=%'
+  ),
+  'cleanup failure remains observable in a committed execution record'
+);
+reset role;
+drop trigger test_fail_audit_cleanup_delete on public.employee_creation_audit;
+drop function public.test_fail_audit_cleanup_delete();
 
 -- Deleting an Auth user must not cascade-delete historical audit evidence.
 insert into public.employee_creation_audit(actor_id, outcome, detail_code)
