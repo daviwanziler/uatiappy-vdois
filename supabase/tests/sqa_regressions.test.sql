@@ -4,8 +4,8 @@ begin;
 create extension if not exists pgtap with schema extensions;
 select extensions.plan(7);
 
-\\set audit_actor '11111111-1111-4111-8111-111111111111'
-\\set target_hash 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+\set audit_actor '11111111-1111-4111-8111-111111111111'
+\set target_hash 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 
 -- Use a unique email/hash fixture; assertions continue to find the row after
 -- reconciliation changes detail_code from the fixture marker to its final code.
