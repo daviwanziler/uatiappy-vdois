@@ -6,6 +6,10 @@ export type AccountStatusPayload = {
   status: 'ACTIVE' | 'BLOCKED' | 'DISABLED'
 }
 
+export function authBanDurationForStatus(status: 'ACTIVE' | 'BLOCKED' | 'DISABLED'): string {
+  return status === 'ACTIVE' ? 'none' : '876000h'
+}
+
 export function parseAccountStatusPayload(value: unknown): AccountStatusPayload | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null
   const payload = value as Record<string, unknown>
