@@ -2,7 +2,7 @@
 -- Run with: supabase test db
 begin;
 create extension if not exists pgtap with schema extensions;
-select extensions.plan(8);
+select extensions.plan(7);
 
 \set audit_actor '11111111-1111-4111-8111-111111111111'
 
