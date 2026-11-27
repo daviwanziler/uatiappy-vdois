@@ -1,47 +1,49 @@
 # Arquitetura do UatiAppy
 
-Esta pasta reúne a documentação da arquitetura do UatiAppy, um aplicativo mobile de comunicação institucional.
+Esta pasta documenta a arquitetura oficial do UatiAppy: **aplicação Web responsiva com abordagem Mobile First**. O usuário acessa o sistema pelo navegador em celulares, tablets e computadores; não há aplicativo React Native/Expo nesta decisão.
 
-## Diagrama de arquitetura
+## Decisão arquitetural
+A decisão vigente está registrada em [ADR-001 — Web Mobile First](./ADR-001-web-mobile-first.md). Ela substitui as referências anteriores a aplicativo nativo React Native + Expo.
 
-- [Diagrama de Arquitetura UatiAppy (PDF)](./Diagrama%20de%20Arquitetura%20UatiAppy.pdf) — representação visual da arquitetura mobile.
-- [Fonte PlantUML da arquitetura mobile](./diagrama-arquitetura-mobile.puml) — visão lógica editável dos perfis, aplicativo, backend e persistência.
+## Diagrama
+- [Fonte PlantUML da arquitetura Web](./diagrama-arquitetura-web.puml) — fonte PlantUML oficial da arquitetura Web Mobile First.
+- O PDF antigo de arquitetura mobile não representa a decisão vigente. Não o utilize como referência; deve ser regenerado a partir da fonte PlantUML Web antes da entrega documental final.
 
-O diagrama deve representar o aplicativo mobile desenvolvido com React Native e Expo. Sempre que a arquitetura mudar, atualize a fonte PlantUML e gere novamente o PDF correspondente antes de considerar o artefato visual sincronizado.
-
-## Stack tecnológica definida
-
-A equipe confirmou a seguinte stack para o projeto:
+## Stack oficial
 
 | Camada / finalidade | Tecnologia |
 |---|---|
-| Aplicativo | Mobile |
+| Produto | Aplicação Web responsiva — Mobile First |
 | Linguagem | JavaScript |
-| Framework mobile | React Native |
-| Ferramenta/plataforma de desenvolvimento mobile | Expo |
-| Editor | Visual Studio Code |
-| Backend e banco de dados | Supabase / PostgreSQL |
+| Interface | HTML5, CSS3 e Vanilla JavaScript |
+| Backend | Supabase |
+| Banco de dados | PostgreSQL |
+| Autenticação | Supabase Auth |
+| Operações administrativas privilegiadas | Supabase Edge Functions |
+| Hospedagem da aplicação Web | Vercel |
 | Versionamento e gestão | Git e GitHub |
-| Automação CI/CD | GitHub Actions |
-| Serviços web complementares (se necessários) | Vercel |
+| Integração contínua | GitHub Actions |
+| Editor | Visual Studio Code |
 
-O aplicativo será executado nos dispositivos móveis. React Native fornece a camada de interface multiplataforma e Expo apoia o desenvolvimento, testes e geração de builds. A distribuição Android/iOS deverá utilizar um fluxo compatível com Expo/React Native (por exemplo, EAS Build/Submit, quando adotado pela equipe).
+A interface deve priorizar telas pequenas, adaptar-se a diferentes larguras e permanecer utilizável em navegadores modernos. A estratégia PWA/offline não está incluída automaticamente: exige requisitos e implementação próprios.
 
-O Supabase será utilizado como backend e banco de dados. A aplicação mobile deverá consumir seus recursos por SDK/API, com credenciais e políticas configuradas de forma segura. A seleção e configuração efetiva de Auth, RLS, Realtime, tabelas, relacionamentos, funções e políticas devem seguir os requisitos aprovados; não considerar serviços como implementados apenas por constarem nesta arquitetura.
+## Responsabilidades e limites de segurança
 
-GitHub Actions será a base prevista para automações e CI/CD, conforme workflows que forem configurados no repositório. A Vercel poderá hospedar serviços web complementares, caso necessários, mas **não hospeda nem distribui diretamente o aplicativo mobile nativo**.
+- **Navegador:** apresenta a interface, mantém apenas dados não privilegiados e chama APIs autorizadas.
+- **Supabase Auth:** autentica usuários e fornece contexto de identidade.
+- **Edge Functions:** executam operações administrativas que exigem privilégios de servidor.
+- **PostgreSQL/RLS:** persistem os dados e aplicam autorização no banco, conforme políticas efetivamente implantadas.
+- **Vercel:** publica os arquivos estáticos da aplicação web; não substitui o backend.
 
-## Modelo de acesso e gerenciamento de contas
+A chave `service_role` e quaisquer segredos privilegiados nunca podem ser incluídos no bundle JavaScript, no HTML, em variáveis públicas ou enviados ao navegador. As permissões devem ser verificadas no servidor/banco, não apenas ocultando controles na interface.
 
-O sistema possui dois perfis documentados:
+## Perfis e gerenciamento de contas
 
-- **Administrador:** responsável por cadastrar e gerenciar contas de funcionários, definir a senha inicial, redefinir senhas e bloquear ou desativar contas.
-- **Funcionário:** recebe as credenciais da administração e utiliza a conta para entrar no aplicativo.
+- **Administrador:** cadastra e gerencia contas de funcionários, define senha inicial, redefine senhas e bloqueia/desativa contas.
+- **Funcionário:** utiliza as credenciais fornecidas pela administração para acessar as funcionalidades autorizadas.
 
-Não há autocadastro nem alteração ou redefinição autônoma de senha pelo funcionário. Contas bloqueadas ou desativadas não devem acessar o sistema. A autorização deve ser aplicada no backend/serviço de dados, e não apenas pela ocultação de opções na interface.
+Não há autocadastro nem redefinição autônoma de senha pelo funcionário no escopo definido. Contas bloqueadas/desativadas não podem acessar funcionalidades protegidas.
 
-Os procedimentos de provisionamento inicial do Administrador, entrega segura de credenciais, reativação e revogação de sessões permanecem como pontos de validação.
+## Coerência e implementação
 
-## Coerência documental
-
-Esta documentação deve permanecer alinhada a [Requisitos e escopo do MVP](../requisitos/escopo-mvp.md). A stack acima está definida pela equipe; detalhes de implementação e serviços específicos ainda devem ser refinados em Issues e decisões técnicas. Componentes e serviços ainda não implementados não devem ser tratados como funcionalidades prontas.
+Esta documentação deve permanecer alinhada ao [escopo do MVP](../requisitos/escopo-mvp.md). A presença de um serviço nesta arquitetura não prova que ele esteja configurado, implantado ou validado. Cada integração deve possuir configuração segura, testes e evidência de homologação.
