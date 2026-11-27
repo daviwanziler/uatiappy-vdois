@@ -1,5 +1,5 @@
 import { corsHeadersFor } from '../_shared/cors.ts'
-import { parseAccountStatusPayload, validateEmployeeProvision } from '../_shared/validation.ts'
+import { authBanDurationForStatus, parseAccountStatusPayload, validateEmployeeProvision } from '../_shared/validation.ts'
 import { normalizeAuditEmail, sha256Email } from '../_shared/audit.ts'
 import { finalizeCreatedAccount } from '../_shared/provisioning.ts'
 
@@ -31,6 +31,19 @@ Deno.test('server-side employee provisioning enforces the password policy', () =
   if (!validateEmployeeProvision('employee@example.com', 'short')) throw new Error('A short password must be rejected.')
   if (!validateEmployeeProvision('not-an-email', 'UatiAppy#2026')) throw new Error('An invalid email must be rejected.')
   if (!validateEmployeeProvision('employee@example.com', 'uatiappy#2026')) throw new Error('A password without uppercase must be rejected.')
+})
+
+Deno.test('account status rollback restores Auth ban state for ACTIVE, DISABLED and BLOCKED', () => {
+  const cases = [
+    ['ACTIVE', 'none'],
+    ['DISABLED', '876000h'],
+    ['BLOCKED', '876000h'],
+  ] as const
+  for (const [previousStatus, expectedBanDuration] of cases) {
+    if (authBanDurationForStatus(previousStatus) !== expectedBanDuration) {
+      throw new Error(`Rollback mapping failed for previous status ${previousStatus}.`)
+    }
+  }
 })
 
 Deno.test('admin account status payload rejects malformed JSON shapes and primitive values', () => {
