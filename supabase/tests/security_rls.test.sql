@@ -268,11 +268,11 @@ reset role;
 
 -- A simulated deletion failure must persist a FAILURE execution record.
 create or replace function public.test_fail_audit_cleanup_delete()
-returns trigger language plpgsql as $
+returns trigger language plpgsql as $$$$
 begin
   raise exception 'simulated cleanup failure';
 end;
-$;
+$$$$;
 create trigger test_fail_audit_cleanup_delete
 before delete on public.employee_creation_audit
 for each row execute function public.test_fail_audit_cleanup_delete();
