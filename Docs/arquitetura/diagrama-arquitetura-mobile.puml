@@ -1,5 +1,5 @@
 @startuml
-title UatiAppy — Arquitetura lógica do aplicativo mobile
+title UatiAppy — Arquitetura Web responsiva (Mobile First)
 
 left to right direction
 skinparam componentStyle rectangle
@@ -7,70 +7,57 @@ skinparam componentStyle rectangle
 actor "Administrador" as Admin
 actor "Funcionário" as Employee
 
-node "Dispositivo móvel" as Device {
-  artifact "UatiAppy Mobile\nReact Native + Expo\nJavaScript" as App
+node "Dispositivo do usuário" as Device {
+  artifact "Navegador Web\nCelular / Tablet / Desktop" as Browser
+  artifact "UatiAppy Web\nHTML5 + CSS3 + Vanilla JS" as App
+  Browser --> App
 }
 
-cloud "Supabase — backend como serviço" as Supabase {
-  component "Serviços/API do Supabase\n(consumidos via SDK/API)" as Api
-  component "Supabase Auth\n(se selecionado e configurado)" as Auth
-  component "Serviço administrativo seguro\n(a definir no servidor)" as AdminService
-  database "PostgreSQL" as DB
-  note right of DB
-    Políticas de acesso/RLS,
-    se adotadas, são aplicadas
-    no banco de dados.
-  end note
+cloud "Vercel — hospedagem Web" as Vercel {
+  component "Arquivos estáticos\nHTML / CSS / JavaScript" as Static
+}
+cloud "Supabase — backend" as Supabase {
+  component "Supabase Auth" as Auth
+  component "Supabase Edge Functions\noperações privilegiadas" as Functions
+  database "PostgreSQL + RLS" as DB
 }
 
-Admin --> App
-Employee --> App
-App --> Api : SDK/API — HTTPS
-Api --> DB : operações de dados
-Api --> Auth : autenticação (se adotada)
+Admin --> Browser
+Employee --> Browser
+App --> Static : HTTPS
+App --> Auth : SDK/API — HTTPS
+App --> DB : consultas autorizadas — HTTPS
+App --> Functions : chamadas autenticadas — HTTPS
+Functions --> Auth : Admin API / gestão de contas
+Functions --> DB : operações controladas
 Auth --> DB : identidade e sessão
 
-AdminService --> Api : operações administrativas privilegiadas\npor API segura no servidor
-Api --> DB : operações autorizadas e políticas RLS
-
-note right of AdminService
-  Operações privilegiadas, como criar
-  contas e redefinir credenciais,
-  devem ocorrer somente no servidor.
-  Nunca incluir service_role ou
-  segredos privilegiados no aplicativo.
-  O mecanismo específico ainda
-  não foi escolhido.
+note right of App
+  Interface responsiva Mobile First.
+  Não é aplicativo React Native/Expo.
+  O bundle entregue ao navegador
+  não pode conter segredos.
 end note
 
-note bottom of App
-  Administrador gerencia contas conforme
-  permissões definidas no backend.
-  Funcionário não realiza autocadastro,
-  alteração ou redefinição autônoma de senha.
-  Contas bloqueadas/desativadas não devem
-  acessar os recursos protegidos.
+note right of Functions
+  Validar JWT, papel e estado da conta.
+  Service role somente no ambiente
+  seguro da função, nunca no navegador.
 end note
 
 cloud "GitHub" as GitHub {
   component "Repositório e gestão\nIssues / Pull Requests" as Repo
-  component "GitHub Actions\n(workflows de CI/CD)" as Actions
+  component "GitHub Actions\nCI e verificações" as Actions
 }
 Repo --> Actions : eventos do repositório
-Actions ..> App : verificações/builds\nconforme workflows configurados
-
-cloud "Vercel (opcional)" as Vercel
-Vercel ..> App : eventual serviço web complementar
-note bottom of Vercel
-  Não hospeda nem distribui
-  o aplicativo mobile nativo.
-end note
+Actions ..> Static : build/testes conforme workflow
+Actions ..> Functions : testes e validações
 
 note bottom
-  Stack principal confirmada pela equipe:
-  JavaScript, React Native, Expo, Supabase/PostgreSQL.
-  Recursos específicos do Supabase, serviço administrativo
-  seguro e fluxo de build/distribuição ainda serão detalhados.
-  EAS é uma alternativa a avaliar, não uma adoção confirmada.
+  Stack definida: HTML5, CSS3, Vanilla JavaScript,
+  Supabase Auth, Edge Functions, PostgreSQL/RLS,
+  Vercel e GitHub Actions.
+  PWA/offline e notificações push não são presumidos
+  como implementados; exigem decisão e validação próprias.
 end note
 @enduml
