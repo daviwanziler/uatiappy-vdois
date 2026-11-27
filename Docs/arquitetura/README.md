@@ -6,7 +6,7 @@ Esta pasta documenta a arquitetura oficial do UatiAppy: **aplicação Web respon
 A decisão vigente está registrada em [ADR-001 — Web Mobile First](./ADR-001-web-mobile-first.md). Ela substitui as referências anteriores a aplicativo nativo React Native + Expo.
 
 ## Diagrama
-- [Fonte PlantUML da arquitetura Web](./diagrama-arquitetura-mobile.puml) — o nome histórico do arquivo foi mantido para evitar quebrar referências; seu conteúdo agora representa a arquitetura Web Mobile First.
+- [Fonte PlantUML da arquitetura Web](./diagrama-arquitetura-web.puml) — fonte PlantUML oficial da arquitetura Web Mobile First.
 - O PDF antigo de arquitetura mobile não representa a decisão vigente. Não o utilize como referência; deve ser regenerado a partir da fonte PlantUML Web antes da entrega documental final.
 
 ## Stack oficial
