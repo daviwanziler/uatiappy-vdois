@@ -1,5 +1,3 @@
-import { supabase } from './supabase.js'
-
 const PAGE_SIZE = 30
 const MAX_MESSAGE_LENGTH = 10000
 
@@ -43,7 +41,7 @@ function renderMessage(item, currentUserId) {
   </article>`
 }
 
-export async function renderMessaging(root, user) {
+export async function renderMessaging(root, user, supabase) {
   root.innerHTML = `<main class="messaging-shell">
     <header class="messaging-header">
       <div><p class="eyebrow">Área do funcionário</p><h1>UatiAppy</h1><p class="header-email">${escapeHtml(user.email)}</p></div>
