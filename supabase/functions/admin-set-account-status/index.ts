@@ -1,6 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeadersFor } from '../_shared/cors.ts'
-import { parseAccountStatusPayload } from '../_shared/validation.ts'
+import { authBanDurationForStatus, parseAccountStatusPayload } from '../_shared/validation.ts'
 
 const json = (body: Record<string, unknown>, headers: Record<string, string>, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...headers, 'Content-Type': 'application/json' } })
@@ -74,7 +74,7 @@ Deno.serve(async (request) => {
     .update({ account_status: status, updated_at: new Date().toISOString() }).eq('user_id', userId)
 
   if (profileError) {
-    const restoreBan = previousStatus === 'ACTIVE' ? 'none' : '876000h'
+    const restoreBan = authBanDurationForStatus(previousStatus)
     const { error: rollbackError } = await admin.auth.admin.updateUserById(userId, { ban_duration: restoreBan })
     if (rollbackError) {
       logRollbackFailure({
