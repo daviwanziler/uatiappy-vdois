@@ -34,6 +34,8 @@ select extensions.is(
   'a recent duplicate attempt remains pending until independently resolved'
 );
 
+-- Age the reservation, not the Auth user: this models Auth creation succeeding
+-- after a durable reservation whose final audit update was interrupted.
 update public.employee_creation_audit
 set created_at = now() - interval '20 minutes'
 where detail_code = 'SQA_RECONCILIATION_FIXTURE';

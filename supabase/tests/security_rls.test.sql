@@ -36,13 +36,14 @@ values
   (:'unprovisioned_user', 'authenticated', 'authenticated', 'unprovisioned@uatiappy.test', '', now(),
    '{"provider":"email","providers":["email"]}', '{"role":"ADMINISTRADOR"}', now(), now());
 
--- Simulate Auth account creation succeeding while the audit remains pending.
-insert into public.employee_creation_audit(actor_id, email_sha256, outcome, detail_code)
+-- Simulate a stale reservation that predates successful Auth account creation.
+insert into public.employee_creation_audit(actor_id, email_sha256, outcome, detail_code, created_at)
 values (
   :'user_a',
   encode(extensions.digest('a@uatiappy.test', 'sha256'), 'hex'),
   'PENDING',
-  'SIMULATED_AUDIT_FINALIZE_FAILURE'
+  'SIMULATED_AUDIT_FINALIZE_FAILURE',
+  now() - interval '20 minutes'
 );
 select extensions.is(
   public.reconcile_employee_creation_by_email_hash(encode(extensions.digest('a@uatiappy.test', 'sha256'), 'hex')),
