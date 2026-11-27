@@ -17,7 +17,7 @@ as $$
   select
     c.id,
     peer.user_id,
-    coalesce(nullif(btrim(peer.display_name), ''), nullif(btrim(peer.email), ''), 'Usuário'),
+    coalesce(nullif(btrim(peer.display_name), ''), 'Participante'),
     latest.body,
     latest.created_at,
     coalesce(latest.created_at, c.created_at)
