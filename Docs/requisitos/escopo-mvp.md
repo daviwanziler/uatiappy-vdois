@@ -183,8 +183,8 @@ Antes de iniciar uma implementação, a equipe deve conferir se já existe uma I
 - Definir como o usuário localizará o outro participante.
 - Confirmar o significado e as transições dos estados da mensagem.
 - Decidir se a entrega em tempo real é requisito obrigatório e qual mecanismo será adotado.
-- A stack principal (aplicativo mobile, JavaScript, React Native, Expo, VS Code e Supabase/PostgreSQL) já foi confirmada pela equipe. Registrar eventual validação formal do orientador, se exigida pelo processo acadêmico; manter pendentes apenas os detalhes de implementação e configuração.
-- Definir as versões de Android/iOS e os dispositivos móveis suportados.
+- A stack principal para esta entrega é Web Mobile First: HTML5, CSS3, Vanilla JavaScript, Supabase/PostgreSQL, Supabase Auth, Edge Functions e Vercel. Registrar eventual validação formal do orientador, se exigida pelo processo acadêmico.
+- Definir a matriz de navegadores e viewports suportados e os dispositivos usados nos testes responsivos.
 - Confirmar a estratégia de builds, testes em dispositivos e distribuição do aplicativo.
 - Confirmar quais serviços Supabase serão utilizados (Auth, PostgreSQL, Realtime, RLS e demais recursos), conforme os requisitos.
 - Estabelecer metas mensuráveis para desempenho e demais RNFs que exigirem quantificação.
@@ -401,7 +401,7 @@ node "Navegador do Administrador" as ADMINDEVICE {
   artifact "Aplicação UatiAppy (Web responsiva)" as ADMINAPP
 }
 node "Navegador do Funcionário" as USERDEVICE {
-  artifact "Aplicativo UatiAppy (React Native)" as USERAPP
+  artifact "Aplicação UatiAppy (Web responsiva)" as USERAPP
 }
 node "Serviços Backend (Supabase proposto)" as BACKEND {
   artifact "Autenticação e Autorização" as AUTH
@@ -419,12 +419,10 @@ ACCOUNT --> DB : criar / atualizar contas
 CHAT --> DB : leitura e gravação
 
 note bottom
-  Visão lógica mobile. JavaScript, React Native e Expo
-  compõem a stack mobile confirmada pela equipe. Supabase/PostgreSQL
-  são a base de backend definida; os serviços necessários ainda
-  serão selecionados conforme os requisitos. Vercel não é plataforma
-  de distribuição do aplicativo mobile nativo. Contas bloqueadas/
-  desativadas não podem acessar o sistema.
+  Visão lógica Web Mobile First. HTML5, CSS3 e Vanilla JS
+  são servidos pela Vercel; Supabase Auth, Edge Functions e PostgreSQL
+  compõem o backend. Segredos privilegiados permanecem no servidor.
+  Contas bloqueadas/desativadas não podem acessar o sistema.
 end note
 @enduml
 ```
@@ -633,7 +631,7 @@ ref over Usuario, App : Logout
 
 - Validar com o PO os atores Administrador e Funcionário e os limites de acesso de cada perfil.
 - Confirmar o modelo de domínio, atributos e multiplicidades do diagrama de classes.
-- Revisar a divisão lógica de componentes com base na arquitetura que a equipe vier a escolher.
+- Revisar a divisão lógica de componentes conforme a arquitetura Web Mobile First registrada na ADR-001.
 - Validar a sintaxe e a aplicação do perfil UML, incluindo estereótipos e metaclasses estendidas.
 - Substituir os valores ilustrativos do diagrama de objetos por um cenário acadêmico aprovado, sem usar dados pessoais reais.
 - Atualizar o diagrama de implantação conforme forem definidos os serviços Supabase, ambientes, builds e distribuição; a stack Web Mobile First está definida e a visão atual permanece conceitual.
@@ -644,7 +642,7 @@ ref over Usuario, App : Logout
 
 ## 11. Controle de alterações
 
-Esta versão incorpora as decisões de negócio informadas pelo PO em 25/11/2026: cadastro centralizado pela administração; senha inicial definida pela administração; redefinição de senha feita pela administração; bloqueio/desativação de contas pela administração; perfil Administrador com área exclusiva. Em 27/11/2026, a decisão registrada para esta entrega passou a ser aplicação Web responsiva Mobile First: HTML5, CSS3 e Vanilla JavaScript no frontend; Supabase/PostgreSQL no backend; Supabase Auth e Edge Functions para autenticação e operações privilegiadas; Vercel para hospedagem Web; GitHub/GitHub Actions para versionamento e CI. Esta decisão substitui a referência anterior a React Native/Expo. Permanecem pendentes eventual validação formal do orientador (se exigida) e a definição dos serviços Supabase, ambientes e fluxo de build/distribuição efetivamente necessários. Alterações de escopo devem ser discutidas com o PO, avaliadas tecnicamente pelo TechLead, comunicadas à equipe e submetidas à validação do orientador quando necessário.
+Esta versão incorpora as decisões de negócio informadas pelo PO em 25/11/2026: cadastro centralizado pela administração; senha inicial definida pela administração; redefinição de senha feita pela administração; bloqueio/desativação de contas pela administração; perfil Administrador com área exclusiva. Em 27/11/2026, a decisão registrada para esta entrega passou a ser aplicação Web responsiva Mobile First: HTML5, CSS3 e Vanilla JavaScript no frontend; Supabase/PostgreSQL no backend; Supabase Auth e Edge Functions para autenticação e operações privilegiadas; Vercel para hospedagem Web; GitHub/GitHub Actions para versionamento e CI. Esta decisão substitui a referência anterior a React Native/Expo. Permanecem pendentes eventual validação formal do orientador (se exigida) e a definição dos serviços Supabase, ambientes e pipeline de build/publicação efetivamente necessários. Alterações de escopo devem ser discutidas com o PO, avaliadas tecnicamente pelo TechLead, comunicadas à equipe e submetidas à validação do orientador quando necessário.
 
 ---
 **UatiAppy — documentação de requisitos e escopo do MVP.**
