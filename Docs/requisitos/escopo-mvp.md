@@ -6,7 +6,7 @@
 
 ## 1. Visão geral
 
-O UatiAppy é um projeto acadêmico de aplicativo mobile institucional de comunicação. O objetivo do MVP é demonstrar a troca de mensagens de texto entre dois usuários, com autenticação, persistência, histórico e controle de acesso.
+O UatiAppy é um projeto acadêmico de aplicação web institucional de comunicação, responsiva e com abordagem Mobile First. O objetivo do MVP é demonstrar a troca de mensagens de texto entre dois usuários, com autenticação, persistência, histórico e controle de acesso.
 
 Este documento consolida o escopo conhecido até o momento. Decisões ainda não confirmadas estão identificadas como **pendências de validação** e não devem ser tratadas como requisitos aprovados.
 
@@ -40,7 +40,7 @@ Requisitos funcionais descrevem os serviços e comportamentos que o sistema deve
 - A administração define a senha inicial, entrega as credenciais ao funcionário e também define uma nova senha quando solicitada. O funcionário não realiza cadastro, alteração ou redefinição de senha por conta própria.
 - O RF-003 cobre apenas identificação e informações básicas necessárias à comunicação. Edição avançada de perfil e foto não estão assumidas como parte do MVP.
 - No RF-010, a equipe deve definir precisamente o significado de cada estado (por exemplo, enviado ao servidor, recebido pelo dispositivo destinatário e entregue à conversa). Não presumir confirmação de leitura: ela não está definida no escopo atual.
-- O envio e recebimento em tempo real é uma expectativa de experiência do produto, mas a tecnologia e o mecanismo de atualização ainda dependem da decisão arquitetural.
+- O envio e recebimento em tempo real é uma expectativa de experiência do produto, mas a tecnologia e o mecanismo de atualização deve seguir a arquitetura Web/Supabase e ser validado em testes.
 
 ## 3. Requisitos não funcionais (RNF)
 
@@ -53,7 +53,7 @@ Requisitos não funcionais estabelecem atributos de qualidade e restrições de 
 | RNF-003 | Segurança | Funcionalidades e dados restritos devem exigir autenticação válida. | Testar acesso autenticado e tentativas de acesso sem sessão. |
 | RNF-004 | Privacidade e autorização | Cada usuário deve acessar somente conversas das quais participa. | Testar acesso cruzado entre contas e conversas não autorizadas. |
 | RNF-005 | Confiabilidade | Mensagens confirmadas como armazenadas devem permanecer disponíveis após encerrar e iniciar uma nova sessão. | Enviar, encerrar sessão, autenticar novamente e verificar a recuperação do histórico. |
-| RNF-006 | Compatibilidade mobile | O aplicativo deve funcionar nas plataformas e versões de sistemas operacionais móveis definidas para a entrega acadêmica. | A equipe deve registrar as versões-alvo de Android/iOS e os dispositivos de teste antes da validação. |
+| RNF-006 | Compatibilidade Web responsiva | A aplicação deve funcionar em navegadores modernos de celulares, tablets e computadores, com interface responsiva e prioridade para telas pequenas. | A equipe deve registrar navegadores e larguras de viewport alvo e validar em dispositivos móveis e desktops. |
 | RNF-007 | Integridade | O sistema deve preservar conteúdo, autoria e associação da mensagem à conversa. | Verificar dados após envio, recuperação e atualização do histórico. |
 | RNF-008 | Manutenibilidade | O código deve ser organizado em componentes/módulos com responsabilidades claras e convenções documentadas. | Revisar estrutura, padrões de código e legibilidade em pull requests. |
 | RNF-009 | Consistência de estado | O estado apresentado para uma mensagem deve refletir as confirmações efetivamente recebidas pelo sistema. | Testar sucesso, atraso, falha e reconexão; documentar transições permitidas. |
@@ -196,7 +196,7 @@ Esta seção reúne a seleção de diagramas definida pela equipe para documenta
 
 **Convenções importantes:**
 - Os diagramas devem representar somente o escopo funcional atualmente descrito neste documento.
-- Elementos arquiteturais são conceituais enquanto serviços Supabase, componentes concretos e infraestrutura mobile não forem validados.
+- Elementos arquiteturais são conceituais enquanto serviços Supabase, componentes concretos e infraestrutura Web não forem validados.
 - Estados e confirmações de mensagem ainda dependem de validação; não interpretar os exemplos como confirmação de leitura.
 - Os blocos PlantUML são fontes editáveis. Para visualizar os desenhos, é necessário renderizá-los com uma ferramenta compatível com PlantUML.
 
@@ -276,7 +276,7 @@ end note
 @startuml
 title UatiAppy - Diagrama de Componentes (visao logica)
 
-component "Aplicativo Mobile (React Native)" as UI
+component "Aplicação Web responsiva (HTML/CSS/Vanilla JS)" as UI
 component "Area Administrativa (perfil Administrador)" as ADMINUI
 component "Responsabilidade de Autenticacao e Autorizacao" as AUTH
 component "Responsabilidade de Conversas" as CONV
@@ -294,11 +294,11 @@ CONV --> DATA : dados de conversa
 MSG --> DATA : mensagens
 
 note bottom
-  Divisao conceitual para aplicativo mobile.
+  Divisão conceitual para aplicação Web responsiva Mobile First.
   Administrador e Funcionário usam o aplicativo com
   permissões distintas. A autorização deve ser aplicada
   no backend, não apenas na interface.
-  Stack mobile confirmada pela equipe: JavaScript, React Native e Expo.
+  Stack Web definida: HTML5, CSS3 e JavaScript (Vanilla JS), com Supabase no backend.
 end note
 @enduml
 ```
@@ -389,7 +389,7 @@ end note
 
 #### 10.1.5 Diagrama de Implantação
 
-**Objetivo:** representar os nós lógicos do aplicativo mobile, do backend e da persistência. A stack mobile confirmada pela equipe é JavaScript, React Native e Expo; a configuração final dos serviços Supabase e a estratégia de distribuição ainda dependem de definição.
+**Objetivo:** representar os nós lógicos da aplicação Web responsiva, do backend e da persistência. A interface é HTML5/CSS3/Vanilla JS, hospedada na Vercel; Supabase fornece backend e PostgreSQL.
 
 **Rastreabilidade:** RNF-002, RNF-003, RNF-005, RNF-006 e RNF-010.
 
@@ -397,10 +397,10 @@ end note
 @startuml
 title UatiAppy - Diagrama de Implantacao (visao conceitual)
 
-node "Dispositivo móvel do Administrador" as ADMINDEVICE {
-  artifact "Aplicativo UatiAppy (React Native)" as ADMINAPP
+node "Navegador do Administrador" as ADMINDEVICE {
+  artifact "Aplicação UatiAppy (Web responsiva)" as ADMINAPP
 }
-node "Dispositivo móvel do Funcionário" as USERDEVICE {
+node "Navegador do Funcionário" as USERDEVICE {
   artifact "Aplicativo UatiAppy (React Native)" as USERAPP
 }
 node "Serviços Backend (Supabase proposto)" as BACKEND {
@@ -636,7 +636,7 @@ ref over Usuario, App : Logout
 - Revisar a divisão lógica de componentes com base na arquitetura que a equipe vier a escolher.
 - Validar a sintaxe e a aplicação do perfil UML, incluindo estereótipos e metaclasses estendidas.
 - Substituir os valores ilustrativos do diagrama de objetos por um cenário acadêmico aprovado, sem usar dados pessoais reais.
-- Atualizar o diagrama de implantação conforme forem definidos os serviços Supabase, ambientes, builds e distribuição; a stack mobile já está confirmada e a visão atual permanece conceitual.
+- Atualizar o diagrama de implantação conforme forem definidos os serviços Supabase, ambientes, builds e distribuição; a stack Web Mobile First está definida e a visão atual permanece conceitual.
 - Definir os estados oficiais da mensagem, eventos, transições e confirmações.
 - Confirmar se a entrega ao destinatário depende de ele estar online e como essa condição será identificada.
 - Revisar a visão geral de interação e ajustar sua notação ao padrão de modelagem adotado pela equipe.
@@ -644,7 +644,7 @@ ref over Usuario, App : Logout
 
 ## 11. Controle de alterações
 
-Esta versão incorpora as decisões de negócio informadas pelo PO em 25/11/2026: cadastro centralizado pela administração; senha inicial definida pela administração; redefinição de senha feita pela administração; bloqueio/desativação de contas pela administração; perfil Administrador com área exclusiva. A plataforma definida é aplicação mobile. A equipe confirmou a stack principal: JavaScript, React Native e Expo, com Supabase/PostgreSQL para backend e dados; GitHub/GitHub Actions para versionamento e automação. Vercel não é mecanismo de distribuição mobile. Permanecem pendentes eventual validação formal do orientador (se exigida) e a definição dos serviços Supabase, ambientes e fluxo de build/distribuição efetivamente necessários. Alterações de escopo devem ser discutidas com o PO, avaliadas tecnicamente pelo TechLead, comunicadas à equipe e submetidas à validação do orientador quando necessário.
+Esta versão incorpora as decisões de negócio informadas pelo PO em 25/11/2026: cadastro centralizado pela administração; senha inicial definida pela administração; redefinição de senha feita pela administração; bloqueio/desativação de contas pela administração; perfil Administrador com área exclusiva. Em 27/11/2026, a decisão registrada para esta entrega passou a ser aplicação Web responsiva Mobile First: HTML5, CSS3 e Vanilla JavaScript no frontend; Supabase/PostgreSQL no backend; Supabase Auth e Edge Functions para autenticação e operações privilegiadas; Vercel para hospedagem Web; GitHub/GitHub Actions para versionamento e CI. Esta decisão substitui a referência anterior a React Native/Expo. Permanecem pendentes eventual validação formal do orientador (se exigida) e a definição dos serviços Supabase, ambientes e fluxo de build/distribuição efetivamente necessários. Alterações de escopo devem ser discutidas com o PO, avaliadas tecnicamente pelo TechLead, comunicadas à equipe e submetidas à validação do orientador quando necessário.
 
 ---
 **UatiAppy — documentação de requisitos e escopo do MVP.**
