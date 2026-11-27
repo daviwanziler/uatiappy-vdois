@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeadersFor } from '../_shared/cors.ts'
+import { parseAccountStatusPayload } from '../_shared/account-status.ts'
 
 const json = (body: Record<string, unknown>, headers: Record<string, string>, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...headers, 'Content-Type': 'application/json' } })
@@ -31,20 +32,20 @@ Deno.serve(async (request) => {
     return json({ error: 'Conta administrativa inativa.' }, headers, 403)
   }
 
-  let payload: { userId?: string; status?: string }
-  try { payload = await request.json() } catch { return json({ error: 'Requisição inválida.' }, headers, 400) }
-  const userId = String(payload.userId ?? '')
-  const status = String(payload.status ?? '')
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId)) {
-    return json({ error: 'Identificador de usuário inválido.' }, headers, 400)
+  let rawPayload: unknown
+  try {
+    rawPayload = await request.json()
+  } catch {
+    return json({ error: 'Requisição inválida.' }, headers, 400)
   }
-  if (!['ACTIVE', 'BLOCKED', 'DISABLED'].includes(status)) {
-    return json({ error: 'Status deve ser ACTIVE, BLOCKED ou DISABLED.' }, headers, 400)
-  }
+  const payload = parseAccountStatusPayload(rawPayload)
+  if (!payload) return json({ error: 'Informe um userId válido e um status permitido.' }, headers, 400)
+  const { userId, status } = payload
+
   if (userId === caller.user.id) return json({ error: 'Não é permitido alterar o próprio status por esta operação.' }, headers, 400)
 
   const { data: target, error: targetError } = await admin.from('employee_profiles')
-    .select('user_id, role').eq('user_id', userId).maybeSingle()
+    .select('user_id, role, account_status').eq('user_id', userId).maybeSingle()
   if (targetError || !target) return json({ error: 'Funcionário não encontrado.' }, headers, 404)
   if (target.role === 'ADMINISTRADOR') return json({ error: 'O bloqueio de administradores exige procedimento administrativo separado.' }, headers, 403)
 
@@ -54,8 +55,12 @@ Deno.serve(async (request) => {
     const { error: profileError } = await admin.from('employee_profiles')
       .update({ account_status: 'ACTIVE', updated_at: new Date().toISOString() }).eq('user_id', userId)
     if (profileError) {
-      await admin.auth.admin.updateUserById(userId, { ban_duration: '876000h' })
-      return json({ error: 'Não foi possível atualizar o status da conta.' }, headers, 500)
+      const { error: rollbackAuthError } = await admin.auth.admin.updateUserById(userId, { ban_duration: '876000h' })
+      if (rollbackAuthError) {
+        console.error('account_status_auth_rollback_failed', { userId, code: rollbackAuthError.code })
+        return json({ error: 'Falha ao atualizar e ao restaurar o bloqueio no Auth. A conta exige reconciliação administrativa.' }, headers, 500)
+      }
+      return json({ error: 'Não foi possível atualizar o status da conta; o bloqueio de autenticação foi restaurado.' }, headers, 500)
     }
   } else {
     const { error: profileError } = await admin.from('employee_profiles')
@@ -63,8 +68,18 @@ Deno.serve(async (request) => {
     if (profileError) return json({ error: 'Não foi possível atualizar o status da conta.' }, headers, 500)
     const { error: banError } = await admin.auth.admin.updateUserById(userId, { ban_duration: '876000h' })
     if (banError) {
-      await admin.from('employee_profiles').update({ account_status: 'ACTIVE', updated_at: new Date().toISOString() }).eq('user_id', userId)
-      return json({ error: 'O status foi revertido porque não foi possível revogar a autenticação.' }, headers, 502)
+      const { error: rollbackProfileError } = await admin.from('employee_profiles')
+        .update({ account_status: target.account_status, updated_at: new Date().toISOString() })
+        .eq('user_id', userId)
+      if (rollbackProfileError) {
+        console.error('account_status_profile_rollback_failed', {
+          userId,
+          previousStatus: target.account_status,
+          code: rollbackProfileError.code,
+        })
+        return json({ error: 'Falha ao bloquear no Auth e ao restaurar o status anterior no banco. A conta exige reconciliação administrativa.' }, headers, 500)
+      }
+      return json({ error: 'O status anterior foi restaurado porque não foi possível revogar a autenticação.' }, headers, 502)
     }
   }
 

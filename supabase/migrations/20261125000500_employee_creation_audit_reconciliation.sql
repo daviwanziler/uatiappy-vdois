@@ -19,25 +19,32 @@ begin
     raise exception 'Hash SHA-256 inválido.';
   end if;
 
-  select u.id into v_user_id
-  from auth.users u
-  where encode(extensions.digest(lower(btrim(u.email)), 'sha256'), 'hex') = p_email_sha256
-    and u.raw_app_meta_data ->> 'provisioned_by_admin' = 'true'
-    and u.raw_app_meta_data ->> 'role' = 'FUNCIONARIO'
-  order by u.created_at desc
-  limit 1;
-
-  if v_user_id is null then
-    return null;
-  end if;
-
-  update public.employee_creation_audit
-  set account_user_id = v_user_id,
+  -- A match is valid only when a prior, stale reservation predates the Auth account.
+  -- A fresh reservation for an already-existing email must never be marked successful.
+  with candidate as (
+    select a.id, u.id as user_id
+    from public.employee_creation_audit a
+    join auth.users u
+      on encode(extensions.digest(lower(btrim(u.email)), 'sha256'), 'hex') = a.email_sha256
+    where a.email_sha256 = p_email_sha256
+      and a.outcome = 'PENDING'
+      and a.account_user_id is null
+      and a.created_at < now() - interval '15 minutes'
+      and u.created_at >= a.created_at
+      and u.raw_app_meta_data ->> 'provisioned_by_admin' = 'true'
+      and u.raw_app_meta_data ->> 'role' = 'FUNCIONARIO'
+    order by a.created_at
+    limit 1
+    for update of a
+  )
+  update public.employee_creation_audit a
+  set account_user_id = candidate.user_id,
       outcome = 'SUCCESS',
       detail_code = 'ACCOUNT_CREATED_AUDIT_RECONCILED',
-      finished_at = coalesce(finished_at, now())
-  where email_sha256 = p_email_sha256
-    and outcome = 'PENDING';
+      finished_at = coalesce(a.finished_at, now())
+  from candidate
+  where a.id = candidate.id
+  returning candidate.user_id into v_user_id;
 
   return v_user_id;
 end;
@@ -73,7 +80,6 @@ begin
     );
 
   if not found then
-    -- Idempotent retry: accept only if this exact attempt already records this user.
     if exists (
       select 1 from public.employee_creation_audit
       where id = p_attempt_id and account_user_id = p_account_user_id and outcome = 'SUCCESS'
@@ -85,7 +91,7 @@ begin
 end;
 $record$;
 
--- Reconcile real Auth accounts before timing out pending audit reservations.
+-- Preserve cleanup observability while reconciling only stale, correlated attempts.
 create or replace function public.cleanup_employee_creation_audit()
 returns integer
 language plpgsql
@@ -93,31 +99,60 @@ security definer
 set search_path = ''
 as $cleanup$
 declare
+  v_run_id bigint;
+  v_pending integer := 0;
+  v_rows integer := 0;
   v_deleted integer := 0;
 begin
-  update public.employee_creation_audit a
-  set account_user_id = u.id,
-      outcome = 'SUCCESS',
-      detail_code = 'ACCOUNT_CREATED_AUDIT_RECONCILED',
-      finished_at = coalesce(a.finished_at, now())
-  from auth.users u
-  where a.outcome = 'PENDING'
-    and a.email_sha256 is not null
-    and encode(extensions.digest(lower(btrim(u.email)), 'sha256'), 'hex') = a.email_sha256
-    and u.raw_app_meta_data ->> 'provisioned_by_admin' = 'true'
-    and u.raw_app_meta_data ->> 'role' = 'FUNCIONARIO';
+  insert into public.employee_creation_audit_cleanup_runs(status)
+  values ('RUNNING')
+  returning id into v_run_id;
 
-  update public.employee_creation_audit
-  set outcome = 'FAILURE',
-      detail_code = 'AUDIT_FINALIZATION_TIMEOUT_NO_ACCOUNT',
-      finished_at = now()
-  where outcome = 'PENDING'
-    and created_at < now() - interval '15 minutes'
-    and account_user_id is null;
+  begin
+    update public.employee_creation_audit a
+    set account_user_id = u.id,
+        outcome = 'SUCCESS',
+        detail_code = 'ACCOUNT_CREATED_AUDIT_RECONCILED',
+        finished_at = coalesce(a.finished_at, now())
+    from auth.users u
+    where a.outcome = 'PENDING'
+      and a.account_user_id is null
+      and a.created_at < now() - interval '15 minutes'
+      and u.created_at >= a.created_at
+      and encode(extensions.digest(lower(btrim(u.email)), 'sha256'), 'hex') = a.email_sha256
+      and u.raw_app_meta_data ->> 'provisioned_by_admin' = 'true'
+      and u.raw_app_meta_data ->> 'role' = 'FUNCIONARIO';
+    get diagnostics v_pending = row_count;
 
-  delete from public.employee_creation_audit
-  where created_at < now() - interval '90 days';
-  get diagnostics v_deleted = row_count;
+    update public.employee_creation_audit
+    set outcome = 'FAILURE',
+        detail_code = 'AUDIT_FINALIZATION_TIMEOUT_NO_ACCOUNT',
+        finished_at = now()
+    where outcome = 'PENDING'
+      and created_at < now() - interval '15 minutes'
+      and account_user_id is null;
+    get diagnostics v_rows = row_count;
+    v_pending := v_pending + v_rows;
+
+    delete from public.employee_creation_audit
+    where created_at < now() - interval '90 days';
+    get diagnostics v_deleted = row_count;
+
+    update public.employee_creation_audit_cleanup_runs
+    set finished_at = now(),
+        pending_finalized = v_pending,
+        records_deleted = v_deleted,
+        status = 'SUCCESS'
+    where id = v_run_id;
+  exception when others then
+    update public.employee_creation_audit_cleanup_runs
+    set finished_at = now(),
+        status = 'FAILURE',
+        error_message = left(sqlstate || ': ' || sqlerrm, 1000)
+    where id = v_run_id;
+    raise;
+  end;
+
   return v_deleted;
 end;
 $cleanup$;

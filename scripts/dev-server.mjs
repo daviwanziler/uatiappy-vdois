@@ -3,6 +3,7 @@ import { readFile, stat } from 'node:fs/promises'
 import { extname, join, normalize } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
+import { resolveDevServerHost } from './dev-server-config.mjs'
 
 const root = fileURLToPath(new URL('../public/', import.meta.url))
 const generated = spawnSync(process.execPath, ['--env-file-if-exists=.env', 'scripts/write-config.mjs'], { stdio: 'inherit' })
@@ -23,4 +24,5 @@ const server = createServer(async (req, res) => {
     res.end('Não encontrado')
   }
 })
-server.listen(Number(process.env.PORT ?? 5173), '0.0.0.0', () => console.log('UatiAppy em http://localhost:5173'))
+const host = resolveDevServerHost()
+server.listen(Number(process.env.PORT ?? 5173), host, () => console.log(`UatiAppy em http://${host}:${Number(process.env.PORT ?? 5173)}`))

@@ -30,8 +30,7 @@ Deno.serve(async (request) => {
 
   const adminClient = createClient(url, serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } })
 
-  // The reservation is made before role checks so unauthorized attempts are rate-limited.
-  // The email hash is filled after parsing; the actor identity remains in actor_id.
+  // Reserve the actor's attempt before role checks so unauthorized calls are rate-limited.
   const { data: reservation, error: rateError } = await adminClient.rpc('reserve_employee_creation_attempt', {
     p_actor_id: caller.user.id,
     p_email_sha256: null,
@@ -116,8 +115,7 @@ Deno.serve(async (request) => {
       return json({ error: 'Não foi possível registrar a auditoria da operação.' }, headers, 500)
     }
 
-    // Recover an account created by an earlier request whose audit finalization failed.
-    // This check runs before createUser, so retrying the same request cannot create a duplicate.
+    // Only an older pending reservation can prove that a prior request created this account.
     const { data: recoveredUserId, error: reconcileError } = await adminClient.rpc(
       'reconcile_employee_creation_by_email_hash',
       { p_email_sha256: emailHash },
@@ -128,18 +126,16 @@ Deno.serve(async (request) => {
         code: reconcileError.code,
       })
       await finishAttempt('FAILURE', 'RECONCILIATION_CHECK_FAILED')
-      return json({ error: 'Não foi possível verificar com segurança se a conta já existe. Não repita a operação; tente novamente mais tarde.' }, headers, 503)
+      return json({ error: 'Não foi possível verificar com segurança se a conta já existe. Tente novamente mais tarde.' }, headers, 503)
     }
     if (recoveredUserId) {
-      attemptFinished = true
+      await finishAttempt('FAILURE', 'DUPLICATE_ACCOUNT_RECONCILED')
       return json({
+        error: 'Já existe uma conta para este e-mail. A auditoria da tentativa anterior foi reconciliada; nenhuma conta duplicada foi criada.',
         id: recoveredUserId,
-        email,
-        recovered: true,
-        message: 'A conta já existia e a auditoria foi reconciliada. Nenhuma conta duplicada foi criada.',
-      }, headers, 200)
+        auditReconciled: true,
+      }, headers, 409)
     }
-
 
     const { data, error } = await adminClient.auth.admin.createUser({
       email,
@@ -150,7 +146,7 @@ Deno.serve(async (request) => {
 
     if (error) {
       await finishAttempt('FAILURE', 'AUTH_CREATE_FAILED')
-      return json({ error: 'Não foi possível criar a conta. Verifique se o e-mail já está em uso.' }, headers, 400)
+      return json({ error: 'Não foi possível criar a conta. Verifique se o e-mail já está em uso.' }, headers, 409)
     }
 
     accountCreated = true
