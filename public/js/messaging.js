@@ -124,8 +124,6 @@ export async function renderMessaging(root, user, supabase) {
   }
 
   function renderHistory() {
-    const marker = history.querySelector('[data-load-older]')
-    const markerHtml = marker ? marker.outerHTML : ''
     history.innerHTML = `${hasMore ? '<button type="button" data-load-older class="load-older">Carregar mensagens anteriores</button>' : '<p class="history-end">Início da conversa</p>'}${messages.map(item => renderMessage(item, user.id)).join('')}`
     history.querySelector('[data-load-older]')?.addEventListener('click', loadOlder)
     history.scrollTop = history.scrollHeight
