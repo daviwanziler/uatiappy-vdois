@@ -1,4 +1,5 @@
 import { supabase, isSupabaseConfigured } from './supabase.js'
+import { renderMessaging } from './messaging.js'
 import { validateAdminProvisionInput, validateLoginInput } from './validation.js'
 
 const root = document.querySelector('#app')
@@ -184,14 +185,7 @@ async function renderAdmin() {
   await refresh()
 }
 function renderEmployee() {
-  shell(`${header('Área do funcionário', session.user.email)}
-    <div data-feedback></div>
-    <section class="auth-card"><h2>Bem-vindo!</h2>
-      <p class="auth-description">Você está autenticado como funcionário.</p>
-      <p>${escapeHtml(session.user.email)}</p>
-      <p class="message message-warning">A área de conversas ainda não faz parte desta entrega.</p>
-    </section>`)
-  bindLogout()
+  return renderMessaging(root, session.user, supabase)
 }
 async function render() {
   if (loading) return renderLoading()
