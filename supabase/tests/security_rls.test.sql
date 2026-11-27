@@ -2,7 +2,7 @@
 -- pgTAP plan is 23 assertions. Run only against a disposable local/test Supabase project.
 begin;
 create extension if not exists pgtap with schema extensions;
-select extensions.plan(23);
+select extensions.plan(26);
 
 \set user_a 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
 \set user_b 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
@@ -37,31 +37,47 @@ values
    '{"provider":"email","providers":["email"]}', '{"role":"ADMINISTRADOR"}', now(), now());
 
 -- Simulate Auth account creation succeeding while the audit remains pending.
-insert into public.employee_creation_audit(actor_id, email_sha256, outcome, detail_code)
+insert into public.employee_creation_audit(actor_id, email_sha256, outcome, detail_code, created_at)
 values (
   :'user_a',
   encode(extensions.digest('a@uatiappy.test', 'sha256'), 'hex'),
   'PENDING',
-  'SIMULATED_AUDIT_FINALIZE_FAILURE'
+  'SIMULATED_AUDIT_FINALIZE_FAILURE',
+  now() - interval '1 minute'
+);
+insert into public.employee_creation_audit(actor_id, email_sha256, outcome, detail_code)
+values (
+  :'user_b',
+  encode(extensions.digest('a@uatiappy.test', 'sha256'), 'hex'),
+  'PENDING',
+  'RETRY_REQUEST_RECEIVED'
 );
 select extensions.is(
-  public.reconcile_employee_creation_by_email_hash(encode(extensions.digest('a@uatiappy.test', 'sha256'), 'hex')),
-  :'user_a'::uuid,
-  'reconciliation locates the already-created Auth account by normalized email hash'
+  public.reconcile_employee_creation_by_email_hash(
+    (select id from public.employee_creation_audit where actor_id = :'user_b' and outcome = 'PENDING'
+     and email_sha256 = encode(extensions.digest('a@uatiappy.test', 'sha256'), 'hex')),
+    encode(extensions.digest('a@uatiappy.test', 'sha256'), 'hex')
+  ) ->> 'status',
+  'RECOVERED',
+  'reconciliation recovers only an older correlated pending attempt'
 );
 select extensions.is(
   (select outcome from public.employee_creation_audit
-   where email_sha256 = encode(extensions.digest('a@uatiappy.test', 'sha256'), 'hex')
-   order by created_at desc limit 1),
+   where actor_id = :'user_a' and email_sha256 = encode(extensions.digest('a@uatiappy.test', 'sha256'), 'hex')),
   'SUCCESS',
-  'reconciliation changes the pending audit to SUCCESS'
+  'the original pending audit is marked SUCCESS'
 );
 select extensions.is(
   (select account_user_id from public.employee_creation_audit
-   where email_sha256 = encode(extensions.digest('a@uatiappy.test', 'sha256'), 'hex')
-   order by created_at desc limit 1),
+   where actor_id = :'user_a' and email_sha256 = encode(extensions.digest('a@uatiappy.test', 'sha256'), 'hex')),
   :'user_a'::uuid,
   'reconciliation stores the created Auth user id for traceability'
+);
+select extensions.is(
+  (select detail_code from public.employee_creation_audit
+   where actor_id = :'user_b' and email_sha256 = encode(extensions.digest('a@uatiappy.test', 'sha256'), 'hex')),
+  'RETRY_RECONCILED_PREVIOUS_ATTEMPT',
+  'the retry is not recorded as a second successful creation'
 );
 
 insert into public.conversations(id, created_by) values
@@ -211,6 +227,29 @@ select extensions.is(
   'rate-limited retries do not create additional audit rows'
 );
 reset role;
+
+-- The cleanup job records a durable successful run with counters.
+set local role service_role;
+select public.cleanup_employee_creation_audit();
+select extensions.ok(
+  exists (
+    select 1 from public.employee_creation_audit_cleanup_runs
+    where status = 'SUCCESS' and finished_at is not null
+      and pending_finalized >= 0 and records_deleted >= 0
+  ),
+  'audit cleanup records completion and execution counters'
+);
+reset role;
+
+-- Deleting an Auth user must not cascade-delete historical audit evidence.
+insert into public.employee_creation_audit(actor_id, outcome, detail_code)
+values (:'unprovisioned_user', 'SUCCESS', 'PRESERVE_ON_ACTOR_DELETE');
+delete from auth.users where id = :'unprovisioned_user';
+select extensions.is(
+  (select count(*)::int from public.employee_creation_audit where actor_id = :'unprovisioned_user'),
+  1,
+  'audit history survives deletion of its actor account'
+);
 
 select * from extensions.finish();
 rollback;

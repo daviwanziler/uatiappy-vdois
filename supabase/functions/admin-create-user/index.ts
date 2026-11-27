@@ -118,26 +118,34 @@ Deno.serve(async (request) => {
 
     // Recover an account created by an earlier request whose audit finalization failed.
     // This check runs before createUser, so retrying the same request cannot create a duplicate.
-    const { data: recoveredUserId, error: reconcileError } = await adminClient.rpc(
+    const { data: reconciliation, error: reconcileError } = await adminClient.rpc(
       'reconcile_employee_creation_by_email_hash',
-      { p_email_sha256: emailHash },
+      { p_attempt_id: reservation.attempt_id, p_email_sha256: emailHash },
     )
-    if (reconcileError) {
+    if (reconcileError || !reconciliation || typeof reconciliation.status !== 'string') {
       console.error('employee_creation_reconciliation_check_failed', {
         attemptId: reservation.attempt_id,
-        code: reconcileError.code,
+        code: reconcileError?.code ?? 'INVALID_RECONCILIATION_RESPONSE',
       })
       await finishAttempt('FAILURE', 'RECONCILIATION_CHECK_FAILED')
       return json({ error: 'Não foi possível verificar com segurança se a conta já existe. Não repita a operação; tente novamente mais tarde.' }, headers, 503)
     }
-    if (recoveredUserId) {
-      attemptFinished = true
+    if (reconciliation.status === 'DUPLICATE') {
+      attemptFinished = true // The RPC finalized this new attempt as FAILURE/DUPLICATE_EMAIL.
+      return json({ error: 'Já existe uma conta com este e-mail. Nenhuma nova senha foi aplicada.' }, headers, 409)
+    }
+    if (reconciliation.status === 'RECOVERED' && typeof reconciliation.user_id === 'string') {
+      attemptFinished = true // The RPC finalized this retry as FAILURE and reconciled only the older pending attempt.
       return json({
-        id: recoveredUserId,
+        id: reconciliation.user_id,
         email,
         recovered: true,
-        message: 'A conta já existia e a auditoria foi reconciliada. Nenhuma conta duplicada foi criada.',
+        message: 'Uma criação anterior foi reconciliada. A senha desta nova solicitação não foi aplicada.',
       }, headers, 200)
+    }
+    if (reconciliation.status !== 'NOT_FOUND') {
+      await finishAttempt('FAILURE', 'RECONCILIATION_INVALID_STATE')
+      return json({ error: 'Não foi possível confirmar o estado do cadastro.' }, headers, 503)
     }
 
 

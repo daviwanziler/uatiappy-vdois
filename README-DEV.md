@@ -16,7 +16,17 @@ React, React Native, Expo, Vite e bundlers não fazem parte do frontend nesta et
 2. Copie `.env.example` para `.env`.
 3. Preencha `SUPABASE_URL` e `SUPABASE_ANON_KEY` com a URL e a chave pública/anon do projeto.
 4. Execute `npm run dev`.
-5. Acesse http://localhost:5173.
+5. Acesse http://127.0.0.1:5173.
+
+O servidor local escuta somente em `127.0.0.1` por padrão. Para testar em outro dispositivo da rede, configure conscientemente um IP de interface local e as duas variáveis abaixo:
+
+```powershell
+$env:HOST="192.168.1.10"
+$env:ALLOW_EXTERNAL_DEV_HOST="true"
+npm run dev
+```
+
+Substitua o IP pelo endereço da máquina na rede. A exposição externa amplia a superfície de acesso do servidor de desenvolvimento; use-a apenas em rede confiável e remova as variáveis ao terminar. Valores de hostname não-IP diferentes de `localhost` são rejeitados.
 
 O servidor local usa apenas módulos nativos do Node.js. O SDK Supabase é carregado pelo navegador via CDN com versão fixada.
 
