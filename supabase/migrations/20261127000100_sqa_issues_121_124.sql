@@ -50,7 +50,7 @@ begin
     and a.outcome = 'PENDING'
     and a.account_user_id is null
     and a.created_at < v_current_created_at
-    and u.created_at >= a.created_at - interval '2 seconds'
+    and u.created_at >= a.created_at
     and u.created_at <= v_current_created_at + interval '2 seconds'
     and u.raw_app_meta_data ->> 'provisioned_by_admin' = 'true'
     and u.raw_app_meta_data ->> 'role' = 'FUNCIONARIO'
