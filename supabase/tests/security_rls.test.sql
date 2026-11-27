@@ -2,7 +2,7 @@
 -- pgTAP plan is 23 assertions. Run only against a disposable local/test Supabase project.
 begin;
 create extension if not exists pgtap with schema extensions;
-select extensions.plan(26);
+select extensions.plan(28);
 
 \set user_a 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
 \set user_b 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
@@ -47,14 +47,14 @@ values (
 );
 insert into public.employee_creation_audit(actor_id, email_sha256, outcome, detail_code)
 values (
-  :'user_b',
+  :'blocked_user',
   encode(extensions.digest('a@uatiappy.test', 'sha256'), 'hex'),
   'PENDING',
   'RETRY_REQUEST_RECEIVED'
 );
 select extensions.is(
   public.reconcile_employee_creation_by_email_hash(
-    (select id from public.employee_creation_audit where actor_id = :'user_b' and outcome = 'PENDING'
+    (select id from public.employee_creation_audit where actor_id = :'blocked_user' and outcome = 'PENDING'
      and email_sha256 = encode(extensions.digest('a@uatiappy.test', 'sha256'), 'hex')),
     encode(extensions.digest('a@uatiappy.test', 'sha256'), 'hex')
   ) ->> 'status',
@@ -75,9 +75,34 @@ select extensions.is(
 );
 select extensions.is(
   (select detail_code from public.employee_creation_audit
-   where actor_id = :'user_b' and email_sha256 = encode(extensions.digest('a@uatiappy.test', 'sha256'), 'hex')),
+   where actor_id = :'blocked_user' and email_sha256 = encode(extensions.digest('a@uatiappy.test', 'sha256'), 'hex')),
   'RETRY_RECONCILED_PREVIOUS_ATTEMPT',
   'the retry is not recorded as a second successful creation'
+);
+
+-- An existing account without a matching older pending attempt is a duplicate,
+-- not a successful reconciliation.
+insert into public.employee_creation_audit(actor_id, email_sha256, outcome, detail_code)
+values (
+  :'blocked_user',
+  encode(extensions.digest('unprovisioned@uatiappy.test', 'sha256'), 'hex'),
+  'PENDING',
+  'DUPLICATE_RETRY_RECEIVED'
+);
+select extensions.is(
+  public.reconcile_employee_creation_by_email_hash(
+    (select id from public.employee_creation_audit where actor_id = :'blocked_user'
+     and detail_code = 'DUPLICATE_RETRY_RECEIVED'),
+    encode(extensions.digest('unprovisioned@uatiappy.test', 'sha256'), 'hex')
+  ) ->> 'status',
+  'DUPLICATE',
+  'an existing account without a correlated pending attempt is rejected as duplicate'
+);
+select extensions.is(
+  (select outcome from public.employee_creation_audit
+   where actor_id = :'blocked_user' and detail_code = 'DUPLICATE_EMAIL'),
+  'FAILURE',
+  'duplicate retry is not written as a successful creation'
 );
 
 insert into public.conversations(id, created_by) values
