@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+.DS_Store
+# Gerado localmente ou durante o deploy; nunca versionar configuração de runtime.
+public/js/config.js
